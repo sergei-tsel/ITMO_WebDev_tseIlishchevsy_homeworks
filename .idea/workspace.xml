@@ -1,23 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="142b72f9-0482-4ca3-808c-445938a7e8b7" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/.vscode/extensions.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/index.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/package.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/public/vite.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/src/App.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/src/assets/vue.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/src/components/HelloWorld.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/src/main.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/src/style.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/vite.config.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/my-vue-app/yarn.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-vue-app/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/my-vue-app/yarn.lock" afterDir="false" />
-    </list>
+    <list default="true" id="142b72f9-0482-4ca3-808c-445938a7e8b7" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
