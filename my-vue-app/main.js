@@ -23,16 +23,25 @@ const domResultsTaxesContainer = document.getElementById('resultsTaxesContainer'
 const domResultsTotalContainer = document.getElementById('resultsTotalContainer');
 const domInputIBANNumber = document.getElementById('inputIBANNumber');
 
-domBtnDeleteWorkItemPopup.addEventListener('click', onBtnDeleteWorkItemPopupClick);
+//domBtnDeleteWorkItemPopup.addEventListener('click', onBtnDeleteWorkItemPopupClick);
 domBtnCloseWorkItemPopup.addEventListener('click', onBtnCloseWorkItemPopupClick);
-domInputWorkItemQty.addEventListener('keyup', onInputinputWorkItemQtyKeyup);
+/*domInputWorkItemQty.addEventListener('keyup', onInputWorkItemQtyKeyup);
 domInputWorkItemCost.addEventListener('keyup', onInputWorkItemCostKeyup);
 domBtnCreateWorkItem.addEventListener('click', onBtnCreateWorkItemKeyup);
 domInputWorkItemTitle.addEventListener('keyup', onInputWorkItemTitleKeyup);
 domInputWorkItemDescription.addEventListener('keyup', domInputWorkItemDescriptionKeyup);
 
-domInputInvoiceNumber.addEventListener('keyup', onInputInvoiceNumberKeyup);
+domInputInvoiceNumber.addEventListener('keyup', onInputInvoiceNumberKeyup);*/
 domBtnAddWorkItem.addEventListener('click', onBtnAddWorkItemClick);
-domInputDiscountPercent.addEventListener('keyup', onInputDiscountPercentKeyup);
+/*domInputDiscountPercent.addEventListener('keyup', onInputDiscountPercentKeyup);
 domInputTaxPercent.addEventListener('keyup', onInputTaxPercentKeyup);
-domInputIBANNumber.addEventListener('keyup', onInputIBANNumberKeyup);
+domInputIBANNumber.addEventListener('keyup', onInputIBANNumberKeyup);*/
+
+function onBtnAddWorkItemClick () {
+    domPopupWorkItemContainer.hidden = false;
+    console.log(domPopupWorkItemContainer);
+}
+
+function onBtnCloseWorkItemPopupClick () {
+    domPopupWorkItemContainer.hidden = true;
+}
