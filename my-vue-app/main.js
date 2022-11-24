@@ -1,47 +1,74 @@
+import {LOCAL_ITEM_TABLE, LOCAL_ITEM_TITLE, LOCAL_ITEM_DESCRIPTION} from '@/consts/local.js';
+import Dom from "@/consts/dom";
+import InputVO from '@/model/vos/InputVO.js';
+import { disableButtonWhenTextInvalid } from '@/utils/domUtils.js';
+import { isStringNotNumberAndNotEmpty } from '@/utils/stringUtils.js';
+import { localStorageSaveListOfWithKey } from '@/utils/databaseUtils.js';
+import { $, wrapDevOnlyConsoleLog } from '@/utils/generalUtils.js';
+import InputView from '@/view/InputView.js';
+import InputServerService from '@/services/InputServerService.js';
 
-const domPopupWorkItemContainer = document.getElementById('popupWorkItemContainer');
-const domOverlayWorkItemPopup = document.getElementById('overlayWorkItemPopup');
-const domPopupWorkItemContainerForm = document.getElementById('popupWorkItemContainerForm');
-const domBtnDeleteWorkItemPopup = document.getElementById('btnDeleteWorkItemPopup');
-const domBtnCloseWorkItemPopup = document.getElementById('btnCloseWorkItemPopup');
-const domTitleWorkItemContainer = document.getElementById('titleWorkItemContainer');
-const domInputWorkItemQty = document.getElementById('inputWorkItemQty');
-const domInputWorkItemCost = document.getElementById('inputWorkItemCost');
-const domWorkItemTotalContainer = document.getElementById('workItemTotalContainer');
-const domBtnCreateWorkItem = document.getElementById('btnCreateWorkItem');
-const domInputWorkItemTitle = document.getElementById('inputWorkItemTitle');
-const domInputWorkItemDescription = document.getElementById('inputWorkItemDescription');
+/*$(Dom.BTN_DELETE_WORK_ITEM_POPUP).addEventListener('click', onBtnDeleteWorkItemPopupClick);
+$(Dom.OVERLAY_WORK_ITEM_POPUP).addEventListener('click', onOverlayWorkItemPopupClick);*/
+$(Dom.BTN_CLOSE_WORK_ITEM_POPUP).addEventListener('click', onBtnCloseWorkItemPopupClick);
+/*$(Dom.INPUT_WORK_ITEM_QTY).addEventListener('keyup', onInputWorkItemQtyKeyup);
+$(Dom.INPUT_WORK_ITEM_COST).addEventListener('keyup', onInputWorkItemCostKeyup);
+$(Dom.BTN_CREATE_WORK_ITEM).addEventListener('click', onBtnCreateWorkItemKeyup);
+$(Dom.INPUT_WORK_ITEM_TITLE).addEventListener('keyup', onInputWorkItemTitleKeyup);
+$(Dom.INPUT_WORK_ITEM_DESCRIPTION).addEventListener('keyup', domInputWorkItemDescriptionKeyup);
 
-const domInputInvoiceNumber = document.getElementById('inputInvoiceNumber');
-const domTableWorkItems = document.getElementById('domTableWorkItems');
-const domBtnAddWorkItem = document.getElementById('btnAddWorkItem');
-const domResultsSubtotalContainer = document.getElementById('resultsSubtotalContainer');
-const domInputDiscountPercent = document.getElementById('inputDiscountPercent');
-const domResultsDiscountContainer = document.getElementById('resultsDiscountContainer');
-const domInputTaxPercent = document.getElementById('inputTaxPercent');
-const domResultsTaxesContainer = document.getElementById('resultsTaxesContainer');
-const domResultsTotalContainer = document.getElementById('resultsTotalContainer');
-const domInputIBANNumber = document.getElementById('inputIBANNumber');
+$(Dom.INPUT_INVOICE_NUMBER).addEventListener('keyup', onInputInvoiceNumberKeyup);
+$(Dom.TABLE_WORK_ITEMS).addEventListener('click', onInputDomeItemClicked);*/
+$(Dom.BTN_ADD_WORK_ITEM).addEventListener('click', onBtnAddWorkItemClick);
+/*$(Dom.INPUT_DISCOUNT_PERCENT).addEventListener('keyup', onInputDiscountPercentKeyup);
+$(Dom.INPUT_TAX_PERCENT).addEventListener('keyup', onInputTaxPercentKeyup);
+$(Dom.INPUT_IBAN_NUMBER).addEventListener('keyup', onInputIBANNumberKeyup);*/
 
-//domBtnDeleteWorkItemPopup.addEventListener('click', onBtnDeleteWorkItemPopupClick);
-domBtnCloseWorkItemPopup.addEventListener('click', onBtnCloseWorkItemPopupClick);
-/*domInputWorkItemQty.addEventListener('keyup', onInputWorkItemQtyKeyup);
-domInputWorkItemCost.addEventListener('keyup', onInputWorkItemCostKeyup);
-domBtnCreateWorkItem.addEventListener('click', onBtnCreateWorkItemKeyup);
-domInputWorkItemTitle.addEventListener('keyup', onInputWorkItemTitleKeyup);
-domInputWorkItemDescription.addEventListener('keyup', domInputWorkItemDescriptionKeyup);
+let tableOfInputs = [];
+let selectedInputVO = null;
+let selectedInputViewItem = null;
 
-domInputInvoiceNumber.addEventListener('keyup', onInputInvoiceNumberKeyup);*/
-domBtnAddWorkItem.addEventListener('click', onBtnAddWorkItemClick);
-/*domInputDiscountPercent.addEventListener('keyup', onInputDiscountPercentKeyup);
-domInputTaxPercent.addEventListener('keyup', onInputTaxPercentKeyup);
-domInputIBANNumber.addEventListener('keyup', onInputIBANNumberKeyup);*/
+const inputServerService = new InputServerService('http://localhost:3003');
 
+const hasSelectedInput = () => !!selectedInputVO;
+const findTodoById = (id) => tableOfInputs.find((vo) => vo.id === id);
+
+wrapDevOnlyConsoleLog();
+/*
+inputServerService
+    .requestInputs()
+    .then((inputTable) => {
+        console.log('> Initial env:', import.meta.env);
+        console.log('> Initial value:', inputTable);
+
+        tableOfInputs = inputTable;
+        $(Dom.INPUT_WORK_ITEM_TITLE).value = localStorage.getItem(LOCAL_ITEM_TITLE);
+        render_InputTableInContainer(tableOfInputs, $(Dom.TABLE_WORK_ITEMS));
+    })
+    .catch((error) => {
+        $(Dom.APP).innerHTML = `
+      <div id="errorOnInit">
+        <h1>Problem with server</h1>
+        <p style="color:red">${error.toString()}</p>
+      </div>`;
+    })
+    .finally(() => ($(Dom.APP).style.visibility = 'visible'));
+*/
 function onBtnAddWorkItemClick () {
-    domPopupWorkItemContainer.hidden = false;
-    console.log(domPopupWorkItemContainer);
+    $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = false;
+    console.log($(Dom.POPUP_WORK_ITEM_CONTAINER).hidden);
 }
 
 function onBtnCloseWorkItemPopupClick () {
-    domPopupWorkItemContainer.hidden = true;
+    $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
+}
+
+function render_InputTableInContainer(tableOfInputs, container) {
+    let output = '';
+    let inputVO;
+    for (let index in tableOfInputs) {
+        inputVO = tableOfInputs[index];
+        output += InputView.createSimpleViewFromVO(index, inputVO);
+    }
+    container.innerHTML = output;
 }
