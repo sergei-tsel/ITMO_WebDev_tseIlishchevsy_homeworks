@@ -6,7 +6,7 @@ import { isStringNotNumberAndNotEmpty } from '@/utils/stringUtils.js';
 import { localStorageSaveListOfWithKey } from '@/utils/databaseUtils.js';
 import { $, wrapDevOnlyConsoleLog } from '@/utils/generalUtils.js';
 import TodoView from '@/view/TodoView.js';
-import InputServerService from '@/services/InputServerService.js';
+import InputServerService from '@/services/ServerService.js';
 
 let listOfTodos = [];
 let selectedTodoVO = null;

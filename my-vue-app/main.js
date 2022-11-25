@@ -1,12 +1,13 @@
 import {LOCAL_ITEM_TABLE, LOCAL_ITEM_TITLE, LOCAL_ITEM_DESCRIPTION} from '@/consts/local.js';
 import Dom from "@/consts/dom";
+import InvoiceVO from '@/model/vos/InvoiceVO.js';
 import InputVO from '@/model/vos/InputVO.js';
 import { disableButtonWhenTextInvalid } from '@/utils/domUtils.js';
 import { isStringNotNumberAndNotEmpty } from '@/utils/stringUtils.js';
 import { localStorageSaveListOfWithKey } from '@/utils/databaseUtils.js';
 import { $, wrapDevOnlyConsoleLog } from '@/utils/generalUtils.js';
 import InputView from '@/view/InputView.js';
-import InputServerService from '@/services/InputServerService.js';
+import ServerService from '@/services/ServerService.js';
 
 /*$(Dom.BTN_DELETE_WORK_ITEM_POPUP).addEventListener('click', onBtnDeleteWorkItemPopupClick);
 $(Dom.OVERLAY_WORK_ITEM_POPUP).addEventListener('click', onOverlayWorkItemPopupClick);*/
@@ -28,7 +29,7 @@ let tableOfInputs = [];
 let selectedInputVO = null;
 let selectedInputViewItem = null;
 
-const inputServerService = new InputServerService('http://localhost:3003');
+const serverService = new ServerService('http://localhost:3003');
 
 const hasSelectedInput = () => !!selectedInputVO;
 const findTodoById = (id) => tableOfInputs.find((vo) => vo.id === id);
