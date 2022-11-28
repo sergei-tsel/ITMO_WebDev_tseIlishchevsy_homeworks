@@ -1,9 +1,9 @@
-import {LOCAL_ITEM_TABLE, LOCAL_ITEM_TITLE, LOCAL_ITEM_DESCRIPTION} from '@/consts/local.js';
+import {LOCAL_INVOICE_NUMBER, LOCAL_IBAN_NUMBER, LOCAL_ITEM_TABLE, LOCAL_ITEM_TITLE, LOCAL_ITEM_DESCRIPTION} from '@/consts/local.js';
 import Dom from "@/consts/dom";
 import InvoiceVO from '@/model/vos/InvoiceVO.js';
 import InputVO from '@/model/vos/InputVO.js';
 import { disableButtonWhenTextInvalid } from '@/utils/domUtils.js';
-import { isStringNotNumberAndNotEmpty } from '@/utils/stringUtils.js';
+import { isStringNotNumberAndNotEmpty, isNumberWithMaxLength, isOnlyNumbers, isNotLongerThenMaxLength, isOneLine, stylizeIBAN } from '@/utils/stringUtils.js';
 import { localStorageSaveListOfWithKey } from '@/utils/databaseUtils.js';
 import { $, wrapDevOnlyConsoleLog } from '@/utils/generalUtils.js';
 import InputView from '@/view/InputView.js';
@@ -17,13 +17,13 @@ $(Dom.INPUT_WORK_ITEM_COST).addEventListener('keyup', onInputWorkItemCostKeyup);
 $(Dom.BTN_CREATE_WORK_ITEM).addEventListener('click', onBtnCreateWorkItemKeyup);
 $(Dom.INPUT_WORK_ITEM_TITLE).addEventListener('keyup', onInputWorkItemTitleKeyup);
 $(Dom.INPUT_WORK_ITEM_DESCRIPTION).addEventListener('keyup', domInputWorkItemDescriptionKeyup);
-
+*/
 $(Dom.INPUT_INVOICE_NUMBER).addEventListener('keyup', onInputInvoiceNumberKeyup);
-$(Dom.TABLE_WORK_ITEMS).addEventListener('click', onInputDomeItemClicked);*/
+//$(Dom.TABLE_WORK_ITEMS).addEventListener('click', onInputDomeItemClicked);
 $(Dom.BTN_ADD_WORK_ITEM).addEventListener('click', onBtnAddWorkItemClick);
 /*$(Dom.INPUT_DISCOUNT_PERCENT).addEventListener('keyup', onInputDiscountPercentKeyup);
-$(Dom.INPUT_TAX_PERCENT).addEventListener('keyup', onInputTaxPercentKeyup);
-$(Dom.INPUT_IBAN_NUMBER).addEventListener('keyup', onInputIBANNumberKeyup);*/
+$(Dom.INPUT_TAX_PERCENT).addEventListener('keyup', onInputTaxPercentKeyup);*/
+$(Dom.INPUT_IBAN_NUMBER).addEventListener('keyup', onInputIBANNumberKeyup);
 
 let tableOfInputs = [];
 let selectedInputVO = null;
@@ -55,6 +55,22 @@ inputServerService
     })
     .finally(() => ($(Dom.APP).style.visibility = 'visible'));
 */
+async function onInputInvoiceNumberKeyup() {
+    let inputValue = Dom.INPUT_INVOICE_NUMBER.value;
+    console.log('> onInputInvoiceNumberKeyup:', inputValue);
+    if (isStringNotNumberAndNotEmpty(inputValue)) {
+        if (isNumberWithMaxLength(inputValue, 4)) {
+            const saveInvoiceNumber = localStorage.getItem(LOCAL_INVOICE_NUMBER);
+            if(inputValue !== saveInvoiceNumber) {
+                const stylizedInputValue = stylizeIBAN(inputValue);
+                $(Dom.INPUT_IBAN_NUMBER).value = stylizedInputValue;
+                await saveInoviceValue(stylizedInputValue);
+                localStorage.setItem(LOCAL_INVOICE_NUMBER, stylizedInputValue);
+            }
+        }
+    }
+}
+
 function onBtnAddWorkItemClick () {
     $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = false;
     console.log($(Dom.POPUP_WORK_ITEM_CONTAINER).hidden);
@@ -62,6 +78,18 @@ function onBtnAddWorkItemClick () {
 
 function onBtnCloseWorkItemPopupClick () {
     $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
+}
+
+async function onInputIBANNumberKeyup() {
+    const inputValue = Dom.INPUT_IBAN_NUMBER.value;
+    console.log('> onInputIBANNumberKeyup:', inputValue);
+    if (isStringNotNumberAndNotEmpty(inputValue)) {
+        if (isNotLongerThenMaxLength(inputValue, 30)) {
+            const stylizedInputValue = stylizeIBAN(inputValue);
+            await saveInvoiceValue(stylizedInputValue);
+            localStorage.setItem(LOCAL_IBAN_NUMBER, stylizedInputValue);
+        }
+    }
 }
 
 function render_InputTableInContainer(tableOfInputs, container) {
