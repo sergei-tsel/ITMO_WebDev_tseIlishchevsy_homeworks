@@ -1,21 +1,22 @@
-import { LOCAL_LIST_OF_TODOS, LOCAL_INPUT_TEXT } from '@/consts/local';
-import Dom from '@/consts/dom';
-import TodoVO from '@/model/vos/InputVO.js';
+import { LOCAL_LIST_OF_TODOS, LOCAL_INPUT_TEXT } from '@/consts/local.js';
+import Dom from '@/consts/dom.js';
+import TodoVO from '@/model/vos/TodoVO.js';
 import { disableButtonWhenTextInvalid } from '@/utils/domUtils.js';
 import { isStringNotNumberAndNotEmpty } from '@/utils/stringUtils.js';
 import { localStorageSaveListOfWithKey } from '@/utils/databaseUtils.js';
 import { $, wrapDevOnlyConsoleLog } from '@/utils/generalUtils.js';
 import TodoView from '@/view/TodoView.js';
-import InputServerService from '@/services/ServerService.js';
+import TodoServerService from '@/services/TodoServerService.js';
 
 let listOfTodos = [];
 let selectedTodoVO = null;
 let selectedTodoViewItem = null;
 
-const todoServerService = new InputServerService('http://localhost:3003');
+const todoServerService = new TodoServerService('http://localhost:3003');
 
 const hasSelectedTodo = () => !!selectedTodoVO;
 const findTodoById = (id) => listOfTodos.find((vo) => vo.id === id);
+const isTodoTitleUnique = (title) => !listOfTodos.some((todoVO) => todoVO.title === title);
 
 wrapDevOnlyConsoleLog();
 
@@ -79,7 +80,7 @@ async function onTodoDomItemClicked(event) {
     $(Dom.BTN_CREATE_TODO).innerText = 'Update';
     $(Dom.INPUT_TODO_TITLE).value = clickedTodoVO.title;
     selectedTodoViewItem.style.backgroundColor = 'lightgray';
-    onInpTodoTitleKeyup();
+    await onInpTodoTitleKeyup();
   }
 }
 
@@ -98,28 +99,23 @@ function onTodoListChange(event) {
 
 async function onBtnCreateTodoClick(event) {
   // console.log('> domBtnCreateTodo -> handle(click)', this.attributes);
-  const todoTitle_Value_FromDomInput = $(Dom.INPUT_TODO_TITLE).value;
-  // console.log('> domBtnCreateTodo -> todoInputTitleValue:', todoTitleValueFromDomInput);
-
-  const isStringValid = isStringNotNumberAndNotEmpty(todoTitle_Value_FromDomInput);
-
-  if (isStringValid) {
-    const todoVO = create_TodoVOFromTextAndAddToList(todoTitle_Value_FromDomInput, listOfTodos);
-    await todoServerService
-      .saveTodo(todoVO)
-      .then((data) => {
-        console.log('> domBtnCreateTodo -> onBtnCreateTodoClick: saved =', data);
-        clear_InputTextAndLocalStorage();
-        //save_ListOfTodo();
-        render_TodoListInContainer(listOfTodos, $(Dom.LIST_OF_TODOS));
-        disableOrEnable_CreateTodoButtonOnTodoInputTitle();
-    })
-    .catch(alert);
-  }
+ await createTodoWhenPossible();
 }
 
-function onInpTodoTitleKeyup() {
-  // console.log('> onInpTodoTitleKeyup:', event);
+async function onInpTodoTitleKeyup(event) {
+  console.log('> onInpTodoTitleKeyup:', event instanceof KeyboardEvent);
+  if (!event && !(event instanceof KeyboardEvent)) return;
+  const allowEnterCodes = ['Enter', 'NumpadEnter'];
+  const isKeyEnter = allowEnterCodes.contains(event.code);
+  console.log('> \t:', { isKeyEnter });
+  if (isKeyEnter) {
+    await createTodoWhenPossible().catch(({ isStringValid, isTitleNotUnique }) => {
+     if(isStringValid) alert('String valid');
+     if(isTitleNotUnique) alert('Title already exists');
+    });
+    return;
+  }
+
   const inputValue = $(Dom.INPUT_TODO_TITLE).value;
   // console.log('> onInpTodoTitleKeyup:', inputValue);
   if (hasSelectedTodo()) {
@@ -128,7 +124,41 @@ function onInpTodoTitleKeyup() {
     });
   } else {
     localStorage.setItem(LOCAL_INPUT_TEXT, inputValue);
-    disableOrEnable_CreateTodoButtonOnTodoInputTitle();
+    disableOrEnable_CreateTodoButtonOnTodoInputTitle(() => {
+      return isStringNotNumberAndNotEmpty(inputValue) && isTodoTitleUnique(inputValue);
+    });
+  }
+}
+
+async function createTodoWhenPossible() {
+  // console.log('> domBtnCreateTodo -> handle(click)', this.attributes);
+  const todoTitle_Value_FromDomInput = $(Dom.INPUT_TODO_TITLE).value;
+  // console.log('> domBtnCreateTodo -> todoInputTitleValue:', todoTitleValueFromDomInput);
+
+  const isStringValid = isStringNotNumberAndNotEmpty(todoTitle_Value_FromDomInput);
+  const isTitleUnique = isStringValid && isTodoTitleUnique(todoTitle_Value_FromDomInput);
+
+  if (isStringValid && isTitleUnique) {
+    const todoVO = create_TodoVOFromTextAndAddToList(todoTitle_Value_FromDomInput, listOfTodos);
+    $(Dom.INPUT_TODO_TITLE).disabled = true;
+    $(Dom.BTN_CREATE_TODO).disabled = true;
+    await todoServerService
+        .saveTodo(todoVO)
+        .then((data) => {
+          console.log('> domBtnCreateTodo -> onBtnCreateTodoClick: saved =', data);
+          clear_InputTextAndLocalStorage();
+          render_TodoListInContainer(listOfTodos, $(Dom.LIST_OF_TODOS));
+          disableOrEnable_CreateTodoButtonOnTodoInputTitle();
+        })
+        .catch(alert)
+        .finally(() => {
+          $(Dom.INPUT_TODO_TITLE).disabled = false;
+          $(Dom.BTN_CREATE_TODO).disabled = false;
+        });
+  } else {
+    const isStringInvalid = !isStringValid;
+    const isTitleNotUnique = !isTitleUnique;
+    return Promise.reject({ isStringInvalid, isTitleNotUnique });
   }
 }
 

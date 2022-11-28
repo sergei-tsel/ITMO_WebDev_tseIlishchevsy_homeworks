@@ -31,6 +31,11 @@ class ServerService {
     await this.save(invoiceVO, path, 'invoice');
   }
 
+  async updateInvoice(number) {
+    const path = `${this.invoicePath}/${number}`;
+    await this.update(path, 'invoice');
+  }
+
   async deleteInvoice(number) {
     const path = `${this.invoicePath}/${number}`;
     await this.delete(path, 'invoice');
@@ -44,6 +49,11 @@ class ServerService {
   async saveInputs(inputVO) {
     const path = this.inputsPath
     await this.save(inputVO, path, 'tableOfInput');
+  }
+
+  async updateInputs(id) {
+    const path = `${this.invoicePath}/${id}`;
+    await this.update(path, 'tableOfInput');
   }
 
   async deleteInputs(id) {
@@ -77,6 +87,20 @@ class ServerService {
         console.log(`> ServerService -> save: error = ${error}`);
         throw error;
       });
+  }
+
+  async update(vo, path, dataName) {
+    console.log(`> ServerService -> update: ${dataName}`, vo);
+    return fetch(path, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(vo),
+    })
+        .then((response) => processResponse(response, 'update'))
+        .catch((error) => {
+          console.log(`> ServerService -> update: error = ${error}`);
+          throw error;
+        });
   }
 
   async delete(path, dataName) {
