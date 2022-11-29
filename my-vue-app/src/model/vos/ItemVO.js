@@ -1,7 +1,7 @@
-class InputVO {
+class ItemVO {
     static createFromTitle(title, description, qty, cost, total) {
         const inputId = Date.now().toString();
-        return new InputVO(inputId, title, description, qty, cost, total);
+        return new ItemVO(inputId, title, description, qty, cost, total);
         }
 
     constructor(id, title, description, qty, cost, total, date = new Date()) {
@@ -15,4 +15,4 @@ class InputVO {
     }
 }
 
-export default InputVO;
+export default ItemVO;

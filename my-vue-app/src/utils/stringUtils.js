@@ -51,6 +51,7 @@ function isNotLongerThenMaxLength(value, maxLength) {
 
 function isOneLine(value) {
     const isNotNewLine = value.search("/\\n/");
+    console.log('> utils -> string: isOneLine:', !isNotNewLine);
     return !isNotNewLine;
 }
 
@@ -61,7 +62,7 @@ function stylizeIBAN(value) {
         array.push(subValue);
     }
     const stylizedValue = array.join(' ');
-    console.log('> utils -> string: stylizedIBANIfPossible => stylizedValue:', stylizedValue);
+    console.log('> utils -> string: stylizedIBAN => stylizedValue:', stylizedValue);
     return stylizedValue;
 }
 

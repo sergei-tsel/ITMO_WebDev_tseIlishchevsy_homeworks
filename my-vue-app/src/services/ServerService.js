@@ -1,5 +1,5 @@
 const DATA_INVOICE_RESOURCE = 'invoice';
-const DATA_INPUT_TABLE_RESOURCE = 'inputs';
+const DATA_ITEM_TABLE_RESOURCE = 'items';
 
 function processResponse(response, methodName) {
   console.log(`> ServerService -> ${methodName}: response.data =`, response);
@@ -17,48 +17,38 @@ class ServerService {
     return `${this.url}/${DATA_INVOICE_RESOURCE}`;
   }
 
-  get inputsPath() {
-    return `${this.url}/${DATA_INPUT_TABLE_RESOURCE}`;
+  get itemsPath() {
+    return `${this.url}/${DATA_ITEM_TABLE_RESOURCE}`;
   }
 
-  async requestInvoice() {
+  static async requestInvoice() {
     const path = this.invoicePath;
-    await this.request(path, 'invoice');
+    return await this.request(path, 'invoice');
   }
 
-  async saveInvoice(invoiceVO) {
+  static async saveInvoice(invoiceVO) {
     const path = this.invoicePath;
-    await this.save(invoiceVO, path, 'invoice');
+    return await this.save(invoiceVO, path, 'invoice');
   }
 
-  async updateInvoice(number) {
-    const path = `${this.invoicePath}/${number}`;
-    await this.update(path, 'invoice');
+  static async requestItems() {
+    const path = this.itemsPath
+    return await this.request(path, 'tableOfItems');
   }
 
-  async deleteInvoice(number) {
-    const path = `${this.invoicePath}/${number}`;
-    await this.delete(path, 'invoice');
+  static async saveItems(inputVO) {
+    const path = this.itemsPath
+    return await this.save(inputVO, path, 'tableOfItems');
   }
 
-  async requestInputs() {
-    const path = this.inputsPath
-    await this.request(path, 'tableOfInput');
+  static async updateItems(id) {
+    const path = `${this.itemsPath}/${id}`;
+    return await this.update(path, 'tableOfItems');
   }
 
-  async saveInputs(inputVO) {
-    const path = this.inputsPath
-    await this.save(inputVO, path, 'tableOfInput');
-  }
-
-  async updateInputs(id) {
-    const path = `${this.invoicePath}/${id}`;
-    await this.update(path, 'tableOfInput');
-  }
-
-  async deleteInputs(id) {
-    const path = `${this.inputsPath}/${id}`
-    await this.delete(path, 'tableOfInput');
+  static async deleteItems(id) {
+    const path = `${this.itemsPath}/${id}`
+    return await this.delete(path, 'tableOfItems');
   }
 
   async request(path, dataName) {

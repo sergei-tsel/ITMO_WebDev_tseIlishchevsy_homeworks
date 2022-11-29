@@ -18,8 +18,6 @@ class Dom {
   static RESULTS_SUBTOTAL_CONTAINER = 'resultsSubtotalContainer';
   static INPUT_DISCOUNT_PERCENT = 'inputDiscountPercent';
   static RESULTS_DISCOUNT_CONTAINER = 'resultsDiscountContainer';
-  static INPUT_TAX_PERCENT = 'inputTaxPercent';
-  static RESULTS_TAXES_CONTAINER = 'resultsTaxesContainer';
   static RESULTS_TOTAL_CONTAINER = 'resultsTotalContainer';
   static INPUT_IBAN_NUMBER = 'inputIBANNumber';
 }

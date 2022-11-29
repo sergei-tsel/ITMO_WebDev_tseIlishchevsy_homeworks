@@ -10,7 +10,7 @@
 </head>
 <body class="bg-gray-200">
     <div id="app" class="font-sans container relative mx-auto bg-white content-box">
-        <section class="absolute top-0 h-full w-full" id="popupWorkItemContainer">
+        <section class="absolute top-0 h-full w-full" id="popupWorkItemContainer" hidden>
             <div class="absolute top-0 h-full w-full bg-gray-500/60" id="overlayWorkItemPopup"></div>
             <div class="relative h-104 bg-white px-12 py-6 flex flex-col" id="popupWorkItemContainerForm">
                 <header class="flex flex-row justify-between">
@@ -157,22 +157,11 @@
                                         <span id="resultsSubtotalContainer">0</span>
                                     </div>
                                     <div class="flex flex-row justify-between">
-                                    <span>
-                                      <label for="inputDiscountPercent">Discount (</label>
-                                      <input class="w-6 input-percentage" id="inputDiscountPercent" pattern="[0-9]{2}" required="" type="text" value="0">
-                                        %
-                                      ) <sup class="text-gray-400">floor</sup>
-                                    </span>
-                                        <span id="resultsDiscountContainer">0</span>
-                                    </div>
-                                    <div class="flex flex-row justify-between">
                                         <span>
-                                          <label for="inputTaxPercent">Taxes (</label>
-                                          <input class="w-6 input-percentage" id="inputTaxPercent" pattern="[0-9]{2}" required="" type="text" value="0">
-                                            %
-                                          ) <sup class="text-gray-400">ceil</sup>
+                                            <label for="inputDiscountPercent">Discount (</label>
+                                            <input class="w-6 input-percentage" id="inputDiscountPercent" pattern="[0-9]{2}" required="" type="text" value="0">%)
                                         </span>
-                                        <span id="resultsTaxesContainer">0</span>
+                                        <span id="resultsDiscountContainer">0</span>
                                     </div>
                                 </div>
                             </section>

@@ -1,8 +1,8 @@
-class InputView {
+class ItemView {
     static INPUT_VIEW_ITEM = 'inputitem';
 
     static isDomElementMatch(domElement) {
-        return domElement.dataset.type === InputView.INPUT_VIEW_ITEM;
+        return domElement.dataset.type === ItemView.INPUT_VIEW_ITEM;
     }
 
     static createSimpleViewFromVO(index, vo) {
@@ -20,4 +20,4 @@ class InputView {
     }
 }
 
-export default InputView;
+export default ItemView;
