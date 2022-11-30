@@ -1,25 +1,25 @@
-import {LOCAL_INVOICE_NUMBER, LOCAL_SUBTOTAL, LOCAL_DISCOUNT_PERCENT, LOCAL_TOTAL, LOCAL_IBAN_NUMBER, LOCAL_ITEM_TABLE, LOCAL_ITEM_QTY, LOCAL_ITEM_COST, LOCAL_ITEM_TOTAL, LOCAL_ITEM_TITLE, LOCAL_ITEM_DESCRIPTION} from '@/consts/local.js';
+import { LOCAL_DISCOUNT_PERCENT, LOCAL_IBAN_NUMBER, LOCAL_INVOICE_NUMBER, LOCAL_ITEM_COST, LOCAL_ITEM_DESCRIPTION, LOCAL_ITEM_QTY, LOCAL_ITEM_TITLE, LOCAL_ITEM_TOTAL, LOCAL_SUBTOTAL, LOCAL_TOTAL } from '@/consts/local.js';
 import Dom from "@/consts/dom";
 import InvoiceVO from '@/model/vos/InvoiceVO.js';
 import ItemVO from '@/model/vos/ItemVO.js';
 import { disableButtonWhenTextInvalid } from '@/utils/domUtils.js';
 import { isStringNotNumberAndNotEmpty, isNumberWithMaxLength, isOnlyNumbers, isNotLongerThenMaxLength, isOneLine, stylizeIBAN } from '@/utils/stringUtils.js';
 import { localStorageSaveListOfWithKey } from '@/utils/databaseUtils.js';
-import { $, wrapDevOnlyConsoleLog } from '@/utils/generalUtils.js';
+import { delay, wrapDevOnlyConsoleLog,  } from '@/utils/generalUtils.js';
 import ItemView from '@/view/ItemView.js';
 import ServerService from '@/services/ServerService.js';
 
-/*$(Dom.BTN_DELETE_WORK_ITEM_POPUP).addEventListener('click', onBtnDeleteWorkItemPopupClick);
-$(Dom.OVERLAY_WORK_ITEM_POPUP).addEventListener('click', onOverlayWorkItemPopupClick);*/
+$(Dom.BTN_DELETE_WORK_ITEM_POPUP).addEventListener('click', onBtnDeleteWorkItemPopupClick);
+$(Dom.OVERLAY_WORK_ITEM_POPUP).addEventListener('click', onOverlayWorkItemPopupClick);
 $(Dom.BTN_CLOSE_WORK_ITEM_POPUP).addEventListener('click', onBtnCloseWorkItemPopupClick);
 $(Dom.INPUT_WORK_ITEM_QTY).addEventListener('keyup', onInputWorkItemQtyKeyup);
 $(Dom.INPUT_WORK_ITEM_COST).addEventListener('keyup', onInputWorkItemCostKeyup);
-/*$(Dom.BTN_CREATE_WORK_ITEM).addEventListener('click', onBtnCreateWorkItemKeyup);
+$(Dom.BTN_CREATE_WORK_ITEM).addEventListener('click', onBtnCreateWorkItemPopupClick);
 $(Dom.INPUT_WORK_ITEM_TITLE).addEventListener('keyup', onInputWorkItemTitleKeyup);
-$(Dom.INPUT_WORK_ITEM_DESCRIPTION).addEventListener('keyup', domInputWorkItemDescriptionKeyup);
-*/
+$(Dom.INPUT_WORK_ITEM_DESCRIPTION).addEventListener('keyup', onInputWorkItemDescriptionKeyup);
+
 $(Dom.INPUT_INVOICE_NUMBER).addEventListener('keyup', onInputInvoiceNumberKeyup);
-//$(Dom.TABLE_WORK_ITEMS).addEventListener('click', onInputDomeItemClicked);
+$(Dom.TABLE_WORK_ITEMS).addEventListener('click', onInputDomItemClicked);
 $(Dom.BTN_ADD_WORK_ITEM).addEventListener('click', onBtnAddWorkItemClick);
 $(Dom.INPUT_DISCOUNT_PERCENT).addEventListener('keyup', onInputDiscountPercentKeyup);
 $(Dom.INPUT_IBAN_NUMBER).addEventListener('keyup', onInputIBANNumberKeyup);
@@ -27,17 +27,14 @@ $(Dom.INPUT_IBAN_NUMBER).addEventListener('keyup', onInputIBANNumberKeyup);
 let tableOfItems = [];
 
 let selectedItemVO = null;
-let selectedItemViewItem = null;
 
 const serverService = new ServerService('http://localhost:3003');
 
-const hasSelectedItem = () => !!selectedItemVO;
 const findItemById = (id) => tableOfItems.find((vo) => vo.id === id);
 
 wrapDevOnlyConsoleLog();
-
 /*
-ServerService
+serverService
     .requestItems()
     .then((itemTable) => {
         console.log('> Initial env:', import.meta.env);
@@ -67,16 +64,23 @@ async function onInputInvoiceNumberKeyup() {
     } else alert('Keyup error: is not string, number or empty');
 }
 
-function onBtnAddWorkItemClick () {
+async function onBtnAddWorkItemClick() {
     $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = false;
+    await activateBtnIfCreateOfAddPossible();
 }
 
-function onBtnCloseWorkItemPopupClick () {
-    $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
+async function onInputDomItemClicked() {
+    $(Dom.TITLE_WORK_ITEM_CONTAINER).value = 'Update';
+    $(Dom.BTN_CREATE_WORK_ITEM).value = "Add";
+    const domElement = event.target;
+    selectedItemVO = findItemById(domElement.id);
+    $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = false;
+    await activateBtnIfCreateOfAddPossible();
 }
 
 async function onInputDiscountPercentKeyup() {
     const discountPercent = $(Dom.INPUT_DISCOUNT_PERCENT).value;
+    console.log('> onInputDiscountPercentKeyup:', discountPercent);
     await saveInvoice();
     localStorage.setItem(LOCAL_DISCOUNT_PERCENT, discountPercent);
     await calculateInvoice();
@@ -86,6 +90,7 @@ async function calculateInvoice() {
     const subtotal = localStorage.getItem(LOCAL_SUBTOTAL);
     const discount = localStorage.getItem(LOCAL_DISCOUNT_PERCENT);
     const total = subtotal * (1 - discount / 100);
+    console.log('> calculateInvoice:', subtotal, discount, total);
     localStorage.setItem(LOCAL_TOTAL, `${total}`);
     await saveInvoice();
     $(Dom.RESULTS_SUBTOTAL_CONTAINER).value = subtotal;
@@ -110,9 +115,9 @@ async function onInputIBANNumberKeyup() {
     }
 }
 
-async function saveInvoice() {
+function saveInvoice() {
     const invoiceVO = create_Invoice();
-    await ServerService
+    serverService
         .saveInvoice(invoiceVO)
         .then((data) => {
             console.log('> saveInvoice: saved =', data);
@@ -135,31 +140,176 @@ function render_ItemTableInContainer(tableOfItems, container) {
     let output = '';
     let itemVO;
     for (let index in tableOfItems) {
-        inputVO = tableOfItems[index];
+        itemVO = tableOfItems[index];
         output += ItemView.createSimpleViewFromVO(index, ItemVO);
     }
     container.innerHTML = output;
 }
 
-async function onInputWorkItemQtyKeyup() {
+async function activateBtnIfCreateOfAddPossible() {
+    if($(Dom.BTN_CREATE_WORK_ITEM).value === "Create") {
+        if(itemHaveAllKeys()) {
+            $(Dom.BTN_CREATE_WORK_ITEM).disabled = false;
+        } else $(Dom.BTN_CREATE_WORK_ITEM).disabled = true;
+    }
+    if($(Dom.BTN_CREATE_WORK_ITEM).value === "Add") {
+        if(itemHaveKey()) {
+            $(Dom.BTN_CREATE_WORK_ITEM).disabled = false;
+        } else $(Dom.BTN_CREATE_WORK_ITEM).disabled = true;
+    }
+}
+
+function itemHaveAllKeys() {
+    if($(Dom.INPUT_WORK_ITEM_QTY).value !== '') {
+        if($(Dom.INPUT_WORK_ITEM_COST).value !== '') {
+            if($(Dom.INPUT_WORK_ITEM_TITLE).value !== '') {
+                if($(Dom.INPUT_WORK_ITEM_DESCRIPTION).value !== '') {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function onBtnDeleteWorkItemPopupClick() {
+    const itemId = selectedItemVO.id;
+    console.log('> onBtnDeleteWorkItemPopupClick -> itemId:', itemId);
+    const itemVO = findItemById(itemId);
+    const result = confirm('Delete the work item?');
+    if(result) {
+        serverService
+            .deleteItems(itemId)
+            .then(async () => {
+                tableOfItems.splice(tableOfItems.indexOf(itemVO), 1);
+                clearWorkItem();
+                onBtnCloseWorkItemPopupClick();
+                render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
+                await calculateInvoice();
+            })
+            .catch(() => {});
+    }
+}
+
+function clearWorkItem() {
+    $(Dom.INPUT_WORK_ITEM_QTY).value = '';
+    localStorage.removeItem(LOCAL_ITEM_QTY);
+    $(Dom.INPUT_WORK_ITEM_COST).value = '';
+    localStorage.removeItem(LOCAL_ITEM_COST);
+    $(Dom.INPUT_WORK_ITEM_TITLE).value = '';
+    localStorage.removeItem(LOCAL_ITEM_TITLE);
+    $(Dom.INPUT_WORK_ITEM_DESCRIPTION).value = '';
+    localStorage.removeItem(LOCAL_ITEM_DESCRIPTION);
+}
+
+function onBtnCloseWorkItemPopupClick() {
+    if(itemHaveKey()) {
+        const result = confirm('Close the work item?');
+        if(!result) {
+            return;
+        }
+    }
+    $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
+}
+
+function onOverlayWorkItemPopupClick() {
+    onBtnCloseWorkItemPopupClick();
+}
+
+function itemHaveKey() {
+    if($(Dom.INPUT_WORK_ITEM_QTY).value === '') {
+        if($(Dom.INPUT_WORK_ITEM_COST).value === '') {
+            if($(Dom.INPUT_WORK_ITEM_TITLE).value === '') {
+                if($(Dom.INPUT_WORK_ITEM_DESCRIPTION).value === '') {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+function onInputWorkItemQtyKeyup() {
     const itemQty = $(Dom.INPUT_WORK_ITEM_QTY).value;
-    await updateItem();
-    localStorage.setItem(LOCAL_ITEM_QTY, itemQty);
-    await calculateItem();
+    console.log('> calculateItem =', itemQty);
+    if(isStringNotNumberAndNotEmpty()) {
+        if(isOneLine()) {
+            localStorage.setItem(LOCAL_ITEM_QTY, itemQty);
+            calculateItem();
+        }
+    }
 }
 
-async function onInputWorkItemCostKeyup() {
+function onInputWorkItemCostKeyup() {
     const itemCost = $(Dom.INPUT_WORK_ITEM_COST).value;
-    await updateItem();
-    localStorage.setItem(LOCAL_ITEM_COST, itemCost);
-    await calculateItem();
+    console.log('> calculateItem =', itemCost);
+    if(isStringNotNumberAndNotEmpty()) {
+        if(isOneLine()) {
+            localStorage.setItem(LOCAL_ITEM_COST, itemCost);
+            calculateItem();
+        }
+    }
 }
 
-async function calculateItem () {
-    const qty = localStorage.getItem(LOCAL_ITEM_COST);
+function calculateItem() {
+    const qty = localStorage.getItem(LOCAL_ITEM_QTY);
     const cost = localStorage.getItem(LOCAL_ITEM_COST);
     const total = qty * cost;
+    console.log('> calculateItem =', qty, cost, total);
     localStorage.setItem(LOCAL_ITEM_TOTAL, `${total}`);
-    await updateItem();
     $(Dom.WORK_ITEM_TOTAL_CONTAINER).value = total;
+}
+
+function onBtnCreateWorkItemPopupClick() {
+    if($(Dom.BTN_CREATE_WORK_ITEM).value === "Add") {
+        serverService
+            .updateItems(selectedItemVO.id)
+            .then(async () => {
+                clearWorkItem();
+                onBtnCloseWorkItemPopupClick();
+                render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
+                await calculateInvoice();
+            })
+            .catch(() => {});
+        return;
+    }
+    const itemVO = create_Item();
+    serverService
+        .saveItems(itemVO)
+        .then(async () => {
+            clearWorkItem();
+            onBtnCloseWorkItemPopupClick();
+            render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
+            await calculateInvoice();
+        })
+        .catch(() => {});
+}
+
+function create_Item() {
+    const title = localStorage.getItem(LOCAL_ITEM_TITLE);
+    const description = localStorage.getItem(LOCAL_ITEM_DESCRIPTION);
+    const qty = localStorage.getItem(LOCAL_ITEM_QTY);
+    const cost = localStorage.getItem(LOCAL_ITEM_COST);
+    const total = localStorage.getItem(LOCAL_ITEM_TOTAL);
+    const newItemVO = ItemVO.createFromTitle({title, description, qty, cost, total});
+    console.log('> create_Item -> item =', newItemVO);
+    return newItemVO;
+}
+
+function onInputWorkItemTitleKeyup() {
+    let inputValue = Dom.INPUT_WORK_ITEM_TITLE.value;
+    console.log('> onInputWorkItemTitleKeyup:', inputValue);
+    if (isStringNotNumberAndNotEmpty(inputValue)) {
+        if (isOneLine(inputValue)) {
+            localStorage.setItem(LOCAL_ITEM_TITLE, inputValue);
+        }
+    }
+}
+
+function onInputWorkItemDescriptionKeyup() {
+    let inputValue = Dom.INPUT_WORK_ITEM_DESCRIPTION.value;
+    console.log('> onInputWorkItemDescriptionKeyup:', inputValue);
+    if (isStringNotNumberAndNotEmpty(inputValue)) {
+        localStorage.setItem(LOCAL_ITEM_DESCRIPTION, inputValue);
+    }
 }

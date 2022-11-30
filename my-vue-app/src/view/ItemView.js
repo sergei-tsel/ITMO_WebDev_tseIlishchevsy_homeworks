@@ -5,6 +5,7 @@ class ItemView {
         return domElement.dataset.type === ItemView.INPUT_VIEW_ITEM;
     }
 
+
     static createSimpleViewFromVO(index, vo) {
         return `
            <div class="pointer-events-none grid grid-cols-8 select-none items-center border-b-1  py-2 hover:bg-gray-100">

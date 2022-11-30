@@ -21,32 +21,27 @@ class ServerService {
     return `${this.url}/${DATA_ITEM_TABLE_RESOURCE}`;
   }
 
-  static async requestInvoice() {
-    const path = this.invoicePath;
-    return await this.request(path, 'invoice');
-  }
-
-  static async saveInvoice(invoiceVO) {
+  async saveInvoice(invoiceVO) {
     const path = this.invoicePath;
     return await this.save(invoiceVO, path, 'invoice');
   }
 
-  static async requestItems() {
+  async requestItems() {
     const path = this.itemsPath
     return await this.request(path, 'tableOfItems');
   }
 
-  static async saveItems(inputVO) {
+  async saveItems(itemVO) {
     const path = this.itemsPath
-    return await this.save(inputVO, path, 'tableOfItems');
+    return await this.save(itemVO, path, 'tableOfItems');
   }
 
-  static async updateItems(id) {
+  async updateItems(id) {
     const path = `${this.itemsPath}/${id}`;
     return await this.update(path, 'tableOfItems');
   }
 
-  static async deleteItems(id) {
+  async deleteItems(id) {
     const path = `${this.itemsPath}/${id}`
     return await this.delete(path, 'tableOfItems');
   }
@@ -102,6 +97,7 @@ class ServerService {
         throw error;
       });
   }
+
 }
 
 export default ServerService;

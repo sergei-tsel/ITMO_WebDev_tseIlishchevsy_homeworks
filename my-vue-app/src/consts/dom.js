@@ -13,7 +13,7 @@ class Dom {
   static INPUT_WORK_ITEM_TITLE = 'inputWorkItemTitle';
   static INPUT_WORK_ITEM_DESCRIPTION = 'inputWorkItemDescription';
   static INPUT_INVOICE_NUMBER = 'inputInvoiceNumber';
-  static TABLE_WORK_ITEMS = 'domTableWorkItems';
+  static TABLE_WORK_ITEMS = 'tableWorkItems';
   static BTN_ADD_WORK_ITEM = 'btnAddWorkItem';
   static RESULTS_SUBTOTAL_CONTAINER = 'resultsSubtotalContainer';
   static INPUT_DISCOUNT_PERCENT = 'inputDiscountPercent';
