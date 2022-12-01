@@ -13,4 +13,8 @@ function localStorageSaveListOfWithKey(key, list) {
     localStorage.setItem(key, JSON.stringify(list));
 }
 
-export { localStorageListOf, localStorageSaveListOfWithKey };
+function localStorageDeleteListOfWithKey(key) {
+    localStorage.removeItem(key);
+}
+
+export { localStorageListOf, localStorageSaveListOfWithKey, localStorageDeleteListOfWithKey };

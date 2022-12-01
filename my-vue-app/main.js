@@ -1,11 +1,11 @@
-import { LOCAL_DISCOUNT_PERCENT, LOCAL_IBAN_NUMBER, LOCAL_INVOICE_NUMBER, LOCAL_ITEM_COST, LOCAL_ITEM_DESCRIPTION, LOCAL_ITEM_QTY, LOCAL_ITEM_TITLE, LOCAL_ITEM_TOTAL, LOCAL_SUBTOTAL, LOCAL_TOTAL } from '@/consts/local.js';
+import { LOCAL_INVOICE_NUMBER, LOCAL_SUBTOTAL, LOCAL_DISCOUNT_PERCENT, LOCAL_TOTAL, LOCAL_IBAN_NUMBER, LOCAL_ITEMS_TABLE, LOCAL_ITEM_QTY, LOCAL_ITEM_COST, LOCAL_ITEM_TOTAL, LOCAL_ITEM_TITLE, LOCAL_ITEM_DESCRIPTION } from '@/consts/local.js';
 import Dom from "@/consts/dom";
 import InvoiceVO from '@/model/vos/InvoiceVO.js';
 import ItemVO from '@/model/vos/ItemVO.js';
 import { disableButtonWhenTextInvalid } from '@/utils/domUtils.js';
 import { isStringNotNumberAndNotEmpty, isNumberWithMaxLength, isOnlyNumbers, isNotLongerThenMaxLength, isOneLine, stylizeIBAN } from '@/utils/stringUtils.js';
-import { localStorageSaveListOfWithKey } from '@/utils/databaseUtils.js';
-import { delay, wrapDevOnlyConsoleLog,  } from '@/utils/generalUtils.js';
+import { localStorageListOf, localStorageSaveListOfWithKey, localStorageDeleteListOfWithKey } from '@/utils/databaseUtils.js';
+import { delay, wrapDevOnlyConsoleLog, $ } from '@/utils/generalUtils.js';
 import ItemView from '@/view/ItemView.js';
 import ServerService from '@/services/ServerService.js';
 
@@ -54,14 +54,12 @@ serverService
     .finally(() => ($(Dom.APP).style.visibility = 'visible'));
 */
 async function onInputInvoiceNumberKeyup() {
-    let inputValue = Dom.INPUT_INVOICE_NUMBER.value;
+    let inputValue = $(Dom.INPUT_INVOICE_NUMBER).value;
     console.log('> onInputInvoiceNumberKeyup:', inputValue);
-    if (isStringNotNumberAndNotEmpty(inputValue)) {
-        if (isNumberWithMaxLength(inputValue, 4)) {
-            await saveInvoice();
-            localStorage.setItem(LOCAL_INVOICE_NUMBER, inputValue);
-        } else alert('Keyup error: is number longer than max length');
-    } else alert('Keyup error: is not string, number or empty');
+    if(resetOrNotReset_InvoiceInput($(Dom.INPUT_INVOICE_NUMBER), LOCAL_INVOICE_NUMBER, isNumberWithMaxLength, 4)) {
+        localStorage.setItem(LOCAL_INVOICE_NUMBER, inputValue);
+        await saveInvoice();
+    } else alert('Keyup error: is not string, number, empty or longer than max length');
 }
 
 async function onBtnAddWorkItemClick() {
@@ -81,9 +79,9 @@ async function onInputDomItemClicked() {
 async function onInputDiscountPercentKeyup() {
     const discountPercent = $(Dom.INPUT_DISCOUNT_PERCENT).value;
     console.log('> onInputDiscountPercentKeyup:', discountPercent);
-    await saveInvoice();
     localStorage.setItem(LOCAL_DISCOUNT_PERCENT, discountPercent);
     await calculateInvoice();
+    await saveInvoice();
 }
 
 async function calculateInvoice() {
@@ -103,16 +101,25 @@ async function onInputIBANNumberKeyup() {
     console.log('> onInputIBANNumberKeyup:', inputValue);
     const savedInvoiceNumber = localStorage.getItem(LOCAL_IBAN_NUMBER);
     if (inputValue !== savedInvoiceNumber) {
-        if (isStringNotNumberAndNotEmpty(inputValue)) {
-            if (isNotLongerThenMaxLength(inputValue, 30)) {
-                const stylizedInputValue = stylizeIBAN(inputValue);
-                await saveInvoice();
-                localStorage.setItem(LOCAL_IBAN_NUMBER, stylizedInputValue);
-                $(Dom.INPUT_IBAN_NUMBER).value = stylizedInputValue;
-                await onInputIBANNumberKeyup();
-            }
+        if(resetOrNotReset_InvoiceInput($(Dom.INPUT_IBAN_NUMBER), LOCAL_IBAN_NUMBER, isNotLongerThenMaxLength, 30)) {
+            const stylizedInputValue = stylizeIBAN(inputValue);
+            localStorage.setItem(LOCAL_IBAN_NUMBER, stylizedInputValue);
+            $(Dom.INPUT_IBAN_NUMBER).value = stylizedInputValue;
+            await onInputIBANNumberKeyup();
+            await saveInvoice();
         }
     }
+}
+
+function resetOrNotReset_InvoiceInput(input, key, validateInputMethod, param = null, validateAllInputsMethod = isStringNotNumberAndNotEmpty) {
+    const value = input.value;
+    if(validateAllInputsMethod(value)) {
+        if(validateInputMethod(value, param)) {
+           return true;
+        }
+    }
+    input.value = localStorage.getItem(key);
+    return false;
 }
 
 function saveInvoice() {
@@ -312,4 +319,17 @@ function onInputWorkItemDescriptionKeyup() {
     if (isStringNotNumberAndNotEmpty(inputValue)) {
         localStorage.setItem(LOCAL_ITEM_DESCRIPTION, inputValue);
     }
+}
+
+function disableOrEnable_ItemButton(input, button, validateInputMethod, validateAllInputsMethod = isStringNotNumberAndNotEmpty) {
+    console.log(
+        '> disableOrEnableCreateItemButton -> value =',
+        input.value
+    );
+    const textToValidate = input.value;
+    disableButtonWhenTextInvalid(button, textToValidate, validateInputMethod);
+}
+
+function save_ListOfItem() {
+    localStorageSaveListOfWithKey(LOCAL_ITEMS_TABLE, tableOfItems);
 }
