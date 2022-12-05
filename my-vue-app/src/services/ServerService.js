@@ -36,9 +36,9 @@ class ServerService {
     return await this.save(itemVO, path, 'tableOfItems');
   }
 
-  async updateItems(id) {
+  async updateItems(itemVO, id) {
     const path = `${this.itemsPath}/${id}`;
-    return await this.update(path, 'tableOfItems');
+    return await this.update(itemVO, path, 'tableOfItems');
   }
 
   async deleteItems(id) {
