@@ -8,6 +8,8 @@ import { localStorageListOf, localStorageSaveListOfWithKey, localStorageDeleteLi
 import { delay, wrapDevOnlyConsoleLog, $ } from '@/utils/generalUtils.js';
 import ItemView from '@/view/ItemView.js';
 import ServerService from '@/services/ServerService.js';
+import FormService from '@/services/FormService.js';
+import { list } from 'postcss';
 
 $(Dom.BTN_DELETE_WORK_ITEM_POPUP).addEventListener('click', onBtnDeleteWorkItemPopupClick);
 $(Dom.OVERLAY_WORK_ITEM_POPUP).addEventListener('click', onOverlayWorkItemPopupClick);
@@ -53,6 +55,14 @@ serverService
     })
     .finally(() => ($(Dom.APP).style.visibility = 'visible'));
 */
+const invoiceInputs = { number: $(Dom.INPUT_INVOICE_NUMBER), discount: $(Dom.INPUT_DISCOUNT_PERCENT), iban: $(Dom.INPUT_IBAN_NUMBER) };
+const invoiceContainers = { subtotal: $(Dom.RESULTS_SUBTOTAL_CONTAINER), discount: $(Dom.RESULTS_DISCOUNT_CONTAINER), total: $(Dom.RESULTS_TOTAL_CONTAINER) };
+const invoiceFormService = FormService(invoiceInputs, invoiceContainers);
+
+const itemInputs = { qtu: $(Dom.INPUT_WORK_ITEM_QTY), cost: $(Dom.INPUT_WORK_ITEM_COST), title: $(Dom.INPUT_WORK_ITEM_TITLE), description: $(Dom.INPUT_WORK_ITEM_DESCRIPTION) };
+const itemContainers = { total: $(Dom.WORK_ITEM_TOTAL_CONTAINER) };
+const itemFormService = FormService(itemInputs, itemContainers);
+
 async function onInputInvoiceNumberKeyup() {
     let inputValue = $(Dom.INPUT_INVOICE_NUMBER).value;
     console.log('> onInputInvoiceNumberKeyup:', inputValue);
@@ -108,14 +118,10 @@ function resetOrNotReset_InvoiceInput(input, key, validateInputMethod, param = n
 }
 
 async function calculate_Invoice(discount) {
-    const subtotal = localStorage.getItem(LOCAL_SUBTOTAL);
-    const total = subtotal * (1 - discount / 100);
-    console.log('> calculate_Invoice:', subtotal, discount, total);
-    localStorage.setItem(LOCAL_TOTAL, `${total}`);
-    await save_Invoice();
-    $(Dom.RESULTS_SUBTOTAL_CONTAINER).value = subtotal;
-    $(Dom.RESULTS_DISCOUNT_CONTAINER).value = discount;
-    $(Dom.RESULTS_TOTAL_CONTAINER).value = total;
+    invoiceFormService.setInvoiceContainers()
+    const list = invoiceFormService.getList();
+    localStorageSaveListOfWithKey(INVOICE_LIST, list);
+    await save_Invoice(LOCAL_TOTAL, total);
 }
 
 function create_Invoice() {
@@ -129,7 +135,7 @@ function create_Invoice() {
     return newInvoiceVO;
 }
 
-function save_Invoice(key, value) {
+async function save_Invoice(key, value) {
     localStorage.setItem(key, value);
     const invoiceVO = create_Invoice();
     serverService
@@ -143,11 +149,14 @@ function save_Invoice(key, value) {
 function render_ItemTableInContainer(tableOfItems, container) {
     let output = '';
     let itemVO;
+    let itemTotals = {};
     for (let index in tableOfItems) {
         itemVO = tableOfItems[index];
         output += ItemView.createSimpleViewFromVO(index, ItemVO);
+        itemTotals.push(itemVO.total);
     }
     container.innerHTML = output;
+    invoiceFormService.subtotal = itemTotals.reduce((sum, current) => sum + current);
 }
 
 function onBtnDeleteWorkItemPopupClick() {
@@ -223,12 +232,9 @@ function onInputWorkItemDescriptionKeyup() {
 }
 
 function calculate_Item() {
-    const qty = localStorage.getItem(LOCAL_ITEM_QTY);
-    const cost = localStorage.getItem(LOCAL_ITEM_COST);
-    const total = qty * cost;
-    console.log('> calculate_Item:', qty, cost, total);
-    localStorage.setItem(LOCAL_ITEM_TOTAL, `${total}`);
-    $(Dom.WORK_ITEM_TOTAL_CONTAINER).value = total;
+    itemFormService.setItemContainer()
+    const list = itemFormService.getList();
+    localStorageSaveListOfWithKey(ITEM_LIST, list);
 }
 
 function disableOrEnable_ItemButton(input, validateInputMethod = isNaN(input.value), validateAllInputsMethod = isStringNotNumberAndNotEmpty, button = $(Dom.BTN_CREATE_WORK_ITEM),) {
