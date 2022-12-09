@@ -2,14 +2,6 @@ function isStringNotNumberAndNotEmpty(value) {
     const isValueString = typeof value === "string";
     const isValueNotNumber = typeof isNaN(parseInt(value));
 
-    if (isValueString) {
-        if (isValueNotNumber) {
-            if (value.length > 0) {
-                return true;
-            } else return false;
-        } else return false;
-    } else return false;
-
     const result = isValueString && isValueNotNumber && value.length > 0;
 
     console.log('> utils -> string: isStringNotNumberAndNoEmpty => result', {
@@ -23,12 +15,6 @@ function isStringNotNumberAndNotEmpty(value) {
 function isNumberWithMaxLength(value, maxLength) {
     const isValueNumber = isOnlyNumbers(value);
     const isValueWithMaxLength = isNotLongerThenMaxLength(value, maxLength);
-
-    if (isValueNumber) {
-        if (isValueWithMaxLength) {
-            return true;
-        } else return false;
-    } else return false;
 
     const result = isValueNumber && isValueWithMaxLength;
 

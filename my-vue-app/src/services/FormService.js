@@ -36,6 +36,15 @@ class FormService {
         console.log("> FormService -> getList:", list);
         return list;
     }
+
+    clearValues() {
+        for (const input of this.inputs) {
+            input.value = '';
+        }
+        for (const container of this.containers) {
+            container.value = '';
+        }
+    }
 }
 
 export default FormService;

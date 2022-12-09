@@ -1,12 +1,13 @@
 class InvoiceVO {
-    static createFromTitle({ number, subtotal, discount, total, iban }) {
-        return new InvoiceVO({ number, subtotal, discount, total, iban });
+    static createFromTitle({ number, subtotal, discountPercent, discountSum, total, iban }) {
+        return new InvoiceVO({ number, subtotal, discountPercent, discountSum, total, iban });
     }
 
-    constructor({ number, subtotal, discount, total, iban }, date = new Date()) {
+    constructor({ number, subtotal, discountPercent, discountSum, total, iban }, date = new Date()) {
         this.number = number;
         this.subtotal = subtotal;
-        this.discount = discount;
+        this.discountPercent = discountPercent;
+        this.discountSum = discountSum;
         this.total = total;
         this.iban = iban;
         this.date = date;
