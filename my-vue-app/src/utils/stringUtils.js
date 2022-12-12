@@ -27,8 +27,7 @@ function isNumberWithMaxLength(value, maxLength) {
 }
 
 function isOnlyNumbers(value) {
-    const isValueNotOnlyNumbers = value.search("/\D/");
-    return !isValueNotOnlyNumbers;
+    return !isNaN(value);
 }
 
 function isNotLongerThenMaxLength(value, maxLength) {
@@ -36,15 +35,18 @@ function isNotLongerThenMaxLength(value, maxLength) {
 }
 
 function isOneLine(value) {
-    const isNotNewLine = value.search("/\\n/");
-    console.log('> utils -> string: isOneLine:', !isNotNewLine);
-    return !isNotNewLine;
+    const str = String(value);
+    const isNotNewLine = str.match("/\\n/");
+    const result = (isNotNewLine === null) ? true : false;
+    console.log('> utils -> string: isOneLine:', result);
+    return result;
 }
 
 function stylizeIBAN(value) {
+    const str = String(value);
     let array = [];
     for(let i = 0; i < 30; i + 4) {
-        let subValue = value.substr(i, 4);
+        let subValue = str.substr(i, 4);
         array.push(subValue);
     }
     const stylizedValue = array.join(' ');

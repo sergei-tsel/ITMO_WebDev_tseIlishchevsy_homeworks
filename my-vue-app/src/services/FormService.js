@@ -1,20 +1,23 @@
 class FormService {
     constructor(inputs, containers) {
-        console.log('> FormService -> constructor', inputs);
-        this.inputs = inputs;
-        this.containers = containers;
+        console.log('> FormService -> constructor', inputs, containers);
+        this.inputs = Array.from(inputs);
+        this.containers = Array.from(containers);
     }
 
     get itemTotal() {
-        return this.inputs.qty * this.inputs.cost;
+        const itemTotal = this.inputs.qty * this.inputs.cost;
+        return itemTotal ?? 0;
     }
 
     get invoiceDiscountSum() {
-        return this.invoiceSubtotal * (1 - this.inputs.discount.value / 100);
+        const discountSum =  this.invoiceSubtotal * (1 - this.inputs.discount.value / 100);
+        return discountSum ?? 0;
     }
 
     get invoiceTotal() {
-        return this.invoiceSubtotal * (this.inputs.discount.value / 100);
+        const invoiceTotal = this.invoiceSubtotal * (this.inputs.discount.value / 100);
+        return invoiceTotal ?? 0;
     }
 
     setItemContainer() {

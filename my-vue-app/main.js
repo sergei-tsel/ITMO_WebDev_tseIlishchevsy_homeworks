@@ -56,25 +56,25 @@ serverService
 */
 const invoiceInputs = { number: $(Dom.INPUT_INVOICE_NUMBER), discount: $(Dom.INPUT_DISCOUNT_PERCENT), iban: $(Dom.INPUT_IBAN_NUMBER) };
 const invoiceContainers = { subtotal: $(Dom.RESULTS_SUBTOTAL_CONTAINER), discount: $(Dom.RESULTS_DISCOUNT_CONTAINER), total: $(Dom.RESULTS_TOTAL_CONTAINER) };
-const invoiceFormService = FormService(invoiceInputs, invoiceContainers);
+const invoiceFormService = new FormService(invoiceInputs, invoiceContainers);
 const invoiceList = invoiceFormService.getList();
 
 const itemInputs = { qtu: $(Dom.INPUT_WORK_ITEM_QTY), cost: $(Dom.INPUT_WORK_ITEM_COST), title: $(Dom.INPUT_WORK_ITEM_TITLE), description: $(Dom.INPUT_WORK_ITEM_DESCRIPTION) };
 const itemContainers = { total: $(Dom.WORK_ITEM_TOTAL_CONTAINER) };
-const itemFormService = FormService(itemInputs, itemContainers);
+const itemFormService = new FormService(itemInputs, itemContainers);
 const itemList = itemFormService.getList();
 
-const inputService = InputService(isStringNotNumberAndNotEmpty);
-const saveInvoiceList = localStorageListOf(LOCAL_INVOICE_LIST);
-const saveItemList = localStorageListOf(LOCAL_ITEM_LIST);
+const inputService = new InputService(isStringNotNumberAndNotEmpty);
 
 async function keyupInvoiceNumber() {
     inputService.setInput($(Dom.INPUT_INVOICE_NUMBER));
     console.log('> keyupInvoiceNumber:', inputService.input.value);
-    validate_Invoice(keyupInvoiceNumber, saveInvoiceList.inputsValues.number, isNumberWithMaxLength, 4);
-    if(inputService.input.value !== saveInvoiceList.inputsValues.number) {
+    if (inputService.validateInput(isNumberWithMaxLength, 4)) {
         await save_Invoice();
-    } else alert('Keyup error: is not string, number, empty or longer than max length');
+    } else {
+        inputService.reset();
+        alert('Keyup error: is not string, number, empty or longer than max length');
+    }
 }
 
 async function clickAddBtn() {
@@ -93,32 +93,20 @@ async function clickItem() {
 async function keyupDiscountPercent() {
     inputService.setInput($(Dom.INPUT_DISCOUNT_PERCENT));
     console.log('> keyupDiscountPercent:', inputService.input.value);
-    validate_Invoice(keyupDiscountPercent, saveInvoiceList.inputsValues.discount, isNumberWithMaxLength, 2);
-    if (inputService.input.value !== saveInvoiceList.inputsValues.discount) {
+    if(inputService.validateInput(isNumberWithMaxLength, 2)) {
         await calculate_Invoice();
         await save_Invoice();
-    }
+    } else inputService.reset();
 }
 
 async function keyupIBANNumber() {
     inputService.setInput($(Dom.INPUT_IBAN_NUMBER));
     console.log('> keyupIBANNumber:', inputService.input.value);
-    validate_Invoice(keyupIBANNumber, saveInvoiceList.inputsValues.iban, isNotLongerThenMaxLength, 30);
-    if (inputService.input.value !== saveInvoiceList.inputsValues.iban) {
+    if(inputService.validateInput(isNotLongerThenMaxLength, 30)) {
         inputService.input.value = stylizeIBAN(inputService.input.value);
         save_Invoice();
         await keyupIBANNumber();
-    }
-}
-
-async function validate_Invoice(keyupMethod, savedValue, validateMethod, validateProperty = null) {
-    if(inputService.validateInput(isStringNotNumberAndNotEmpty, validateProperty)) {
-        if (inputService.validateInput(validateMethod, validateProperty)) {
-           return;
-        }
-    } 
-    inputService.reset(savedValue);
-    await keyupMethod();
+    } else inputService.reset();
 }
 
 async function calculate_Invoice() {
@@ -198,14 +186,14 @@ function clickOverlayWorkItem() {
 async function keyupQty() {
     inputService.setInput($(Dom.INPUT_WORK_ITEM_QTY));
     console.log('> keyupQty:', inputService.input.value);
-    validate_Item(keyupQty, saveItemList.inputsValues.qty, isOnlyNumbers);
+    validate_Item(isOnlyNumbers);
     calculate_Item();
 }
 
 function keyupCost() {
     inputService.setInput($(Dom.INPUT_WORK_ITEM_COST)); 
     console.log('> keyupCost:', inputService.input.value);
-    validate_Item(keyupCost, saveItemList.inputsValues.cost, isOnlyNumbers);
+    validate_Item(isOnlyNumbers);
     calculate_Item();
 }
 
@@ -221,32 +209,29 @@ function clickCreateBtn() {
 function keyupTitle() {
     inputService.setInput($(Dom.INPUT_WORK_ITEM_TITLE)); 
     console.log('> keyupTitle:', inputService.input.value);
-    validate_Item(keyupTitle, saveItemList.inputsValues.title, isOneLine);
+    validate_Item(isOneLine);
 }
 
 function keyupDescription() {
     inputService.setInput($(Dom.INPUT_WORK_ITEM_DESCRIPTION)); 
     console.log('> keyupDescription:', inputService.input.value);
-    validate_Item(keyupDescription, saveItemList.inputsValues.description);
+    validate_Item();
+}
+
+function validate_Item(validateMethod = null, button = $(Dom.BTN_CREATE_WORK_ITEM)) {
+    if (inputService.validateInput(validateMethod)) {
+        disableButtonWhenTextInvalid(button, inputService.input.value, validateMethod);
+        if (button.disabled === false) {
+            activateBtnIfCreateOrAddPossible(button, itemHaveAllKeys(...itemInputs), itemHaveKey(...itemInputs));
+        }
+        return;
+    }
+    inputService.reset();
 }
 
 function calculate_Item() {
     itemFormService.setItemContainers()
     save_Item();
-}
-
-function validate_Item(keyupMethod, savedValue,  validateMethod = null, button = $(Dom.BTN_CREATE_WORK_ITEM)) {
-    if(inputService.validateInput(isStringNotNumberAndNotEmpty, validateProperty)) {
-        if (inputService.validateInput(validateMethod)) {
-            disableButtonWhenTextInvalid(button, inputService.input.value, validateMethod);
-            if (button.disabled === false) {
-                activateBtnIfCreateOrAddPossible(button, itemHaveAllKeys(...itemInputs), itemHaveKey(...itemInputs));
-            }
-           return;
-        }
-    } 
-    inputService.reset(savedValue);
-    keyupMethod();
 }
 
 function create_Item() {

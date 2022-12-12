@@ -1,6 +1,6 @@
 class InputService {
     constructor(checkMethod) {
-        console.log('> InputService -> constructor', value);
+        console.log('> InputService -> constructor', checkMethod);
         this.checkMethod = checkMethod;
     }
 
@@ -10,13 +10,13 @@ class InputService {
 
     validateInput(validateMethod = null, validateProperty = null) {
         if(this.check()) {
-            if(validateMethod !== null) {
+            if(typeof validateMethod === "function") {
                 if(this.validate(validateMethod, validateProperty)) {
                     return  true;
                 }
                 return false;
             }
-            return true;
+            return false;
         }
         return false;
     }
@@ -35,9 +35,8 @@ class InputService {
         return false;
     }
 
-    reset(savedValue) {
-        this.input.value = savedValue;
-        console.log('> InputService -> reset: savedValue =', saved.value);
+    reset() {
+        this.input.value = '';
     }
 }
 
