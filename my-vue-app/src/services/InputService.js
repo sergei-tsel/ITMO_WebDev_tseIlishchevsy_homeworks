@@ -16,7 +16,7 @@ class InputService {
                 }
                 return false;
             }
-            return false;
+            return true;
         }
         return false;
     }

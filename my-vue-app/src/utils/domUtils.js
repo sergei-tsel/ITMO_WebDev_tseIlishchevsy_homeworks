@@ -10,44 +10,30 @@ function disableButtonWhenTextInvalid(button, text, validateTextFunction, { text
     }
 }
 
-function activateBtnIfCreateOrAddPossible(button, keys, key) {
-    if (!keys && !key) throw new Error('Keys must be defined');
-    if(button.value === "Create") {
-        if(keys) {
-           button.disabled = false;
-        } else button.disabled = true;
-    }
-    if(button.value === "Add") {
-        if(key) {
-            button.disabled = false;
-        } else button.disabled = true;
-    }
+function activateBtnIfCreateOrAddPossible(button, inputs, defineFunction) {
+    if (defineFunction) throw new Error('Define function must be defined');
+   
+    if(defineFunction(inputs)) {
+        button.disabled = false;
+    } else button.disabled = true;
 }
 
-function itemHaveAllKeys(qty, cost, title, description) {
-    if(qty.value !== '') {
-        if(cost.value !== '') {
-            if(title.value !== '') {
-                if(description.value !== '') {
-                    return true;
-                }
-            }
+function itemHaveAllKeys(inputs) {
+    if(typeof inputs !== "undefined") {
+        if(inputs.lenght === 4) {
+            return true;
         }
     }
     return false;
 }
 
-function itemHaveKey(qty, cost, title, description) {
-    if(qty.value === '') {
-        if(cost.value === '') {
-            if(title.value === '') {
-                if(description.value === '') {
-                    return false;
-                }
-            }
+function itemHaveKey(inputs) {
+    if(typeof inputs !== "undefined") {
+        if(inputs.lenght >= 1) {
+            return true;
         }
     }
-    return true;
+    return false;
 }
 
 export { disableButtonWhenTextInvalid, activateBtnIfCreateOrAddPossible, itemHaveAllKeys, itemHaveKey };

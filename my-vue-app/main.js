@@ -30,6 +30,8 @@ let tableOfItems = [];
 
 let selectedItemVO = null;
 
+let workItemMode = null;
+
 const serverService = new ServerService('http://localhost:3003');
 
 const findItemById = (id) => tableOfItems.find((vo) => vo.id === id);
@@ -79,12 +81,16 @@ async function keyupInvoiceNumber() {
 
 async function clickAddBtn() {
     $(Dom.BTN_DELETE_WORK_ITEM_POPUP).disabled = true;
+    $(Dom.BTN_CREATE_WORK_ITEM).disabled = true;
+    workItemMode = "Create";
     $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = false;
 }
 
 async function clickItem() {
     $(Dom.TITLE_WORK_ITEM_CONTAINER).value = 'Update';
+    workItemMode = "Add";
     $(Dom.BTN_CREATE_WORK_ITEM).value = "Add";
+    $(Dom.BTN_CREATE_WORK_ITEM).disabled = true;
     const domElement = event.target;
     selectedItemVO = findItemById(domElement.id);
     $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = false;
@@ -110,7 +116,7 @@ async function keyupIBANNumber() {
 }
 
 async function calculate_Invoice() {
-    invoiceFormService.setInvoiceContainers()
+    invoiceFormService.setInvoiceContainers(tableOfItems)
     await save_Invoice();
 }
 
@@ -198,11 +204,10 @@ function keyupCost() {
 }
 
 function clickCreateBtn() {
-    if($(Dom.BTN_CREATE_WORK_ITEM).value === "Add") {
-       update_Item();
-    }
-    if($(Dom.BTN_CREATE_WORK_ITEM).value === "Create") {
+    if(workItemMode === "Create") {
         save_Item();
+    } else if(workItemMode === "Add") {
+       update_Item();
     }
 }
 
@@ -218,11 +223,15 @@ function keyupDescription() {
     validate_Item();
 }
 
-function validate_Item(validateMethod = null, button = $(Dom.BTN_CREATE_WORK_ITEM)) {
+function validate_Item(validateMethod = inputService.checkMethod, button = $(Dom.BTN_CREATE_WORK_ITEM)) {
     if (inputService.validateInput(validateMethod)) {
-        disableButtonWhenTextInvalid(button, inputService.input.value, validateMethod);
         if (button.disabled === false) {
-            activateBtnIfCreateOrAddPossible(button, itemHaveAllKeys(...itemInputs), itemHaveKey(...itemInputs));
+            if (workItemMode === "Create") {
+                const defineFunction = itemHaveAllKeys;
+            } else if (workItemMode === "Add") {
+                const defineFunction = itemHaveKey;
+            }
+            activateBtnIfCreateOrAddPossible(button, itemFormService.inputs, defineFunction);
         }
         return;
     }
@@ -230,7 +239,7 @@ function validate_Item(validateMethod = null, button = $(Dom.BTN_CREATE_WORK_ITE
 }
 
 function calculate_Item() {
-    itemFormService.setItemContainers()
+    itemFormService.setItemContainer();
     save_Item();
 }
 
@@ -243,20 +252,6 @@ function create_Item() {
     const newItemVO = ItemVO.createFromTitle({title, description, qty, cost, total});
     console.log('> create_Item -> item =', newItemVO);
     return newItemVO;
-}
-
-function update_Item() {
-    serverService
-        .updateItems(selectedItemVO, selectedItemVO.id)
-        .then(async () => {
-            clear_Item();
-            clickCloseBtn();
-            render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
-            await calculate_Invoice();
-        })
-        .catch(() => {});
-    localStorageSaveListOfWithKey(LOCAL_ITEM_LIST, itemList);
-    localStorageSaveListOfWithKey(LOCAL_ITEMS_TABLE, tableOfItems);    
 }
 
 function save_Item() {
@@ -272,6 +267,20 @@ function save_Item() {
         .catch(() => {});
     localStorageSaveListOfWithKey(LOCAL_ITEM_LIST, itemList);     
     localStorageSaveListOfWithKey(LOCAL_ITEMS_TABLE, tableOfItems);
+}
+
+function update_Item() {
+    serverService
+        .updateItems(selectedItemVO, selectedItemVO.id)
+        .then(async () => {
+            clear_Item();
+            clickCloseBtn();
+            render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
+            await calculate_Invoice();
+        })
+        .catch(() => {});
+    localStorageSaveListOfWithKey(LOCAL_ITEM_LIST, itemList);
+    localStorageSaveListOfWithKey(LOCAL_ITEMS_TABLE, tableOfItems);    
 }
 
 function clear_Item() {
