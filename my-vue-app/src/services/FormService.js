@@ -17,8 +17,16 @@ class FormService {
         return this.inputs.qty.value * this.inputs.cost.value;
     }
 
+    setInvoiceSubtotal(tableOfItems) {
+        const items = tableOfItems;
+        const itemsTotals = items.map(item => item.total);
+        this.invoiceSubtotal = itemsTotals.reduce((sum, current) => sum + current, 0);
+    }
+
+
     setInvoiceContainers(tableOfItems) {
-        this.containers.subtotal.innerText = this.getInvoiceSubtotal(tableOfItems);
+        this.setInvoiceSubtotal(tableOfItems);
+        this.containers.subtotal.innerText = this.invoiceSubtotal;
         this.containers.discount.innerText = this.invoiceDiscountSum;
         this.containers.total.innerText = this.invoiceTotal;
         console.log(`> FormService -> setInvoiceContainers: ${this.containers.subtotal.innerText}, ${this.containers.discount.innerText}, ${this.containers.total.innerText}`);
@@ -27,12 +35,6 @@ class FormService {
     setItemContainer() {
         this.containers.total.innerText = this.itemTotal;
         console.log('> FormService -> setItemContainer:', this.containers.total.innerText);
-    }
-
-    getInvoiceSubtotal(tableOfItems) {
-        items = Array.from(tableOfItems);
-        itemsTotals = items.map(item => item.total);
-        return itemsTotals.reduce((sum, current) => sum + current, 0);
     }
 
     getInvoiceList() {

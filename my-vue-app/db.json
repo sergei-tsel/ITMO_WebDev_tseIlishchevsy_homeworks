@@ -1,6 +1,8 @@
 {
-  "invoice": [],
-  "items": [],
+  "invoice": [
+  ],
+  "items": [
+  ],
   "profile": {
     "name": "typicode"
   }

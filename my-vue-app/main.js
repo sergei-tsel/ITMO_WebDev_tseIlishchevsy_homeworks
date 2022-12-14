@@ -113,13 +113,11 @@ async function keyupIBANNumber() {
     if(inputService.validateInput(isNotLongerThenMaxLength, 30)) {
         inputService.input.value = stylizeIBAN(inputService.input.value);
         save_Invoice();
-        await keyupIBANNumber();
     } else inputService.reset();
 }
 
 async function calculate_Invoice() {
     invoiceFormService.setInvoiceContainers(tableOfItems)
-    await save_Invoice();
 }
 
 function create_Invoice() {
@@ -211,6 +209,8 @@ function clickCreateBtn() {
     } else if(workItemMode === "Add") {
        update_Item();
     }
+    $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
+    calculate_Invoice();
 }
 
 function keyupTitle() {
