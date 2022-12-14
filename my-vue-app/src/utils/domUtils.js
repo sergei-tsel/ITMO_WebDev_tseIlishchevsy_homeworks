@@ -11,7 +11,7 @@ function disableButtonWhenTextInvalid(button, text, validateTextFunction, { text
 }
 
 function activateBtnIfCreateOrAddPossible(button, inputs, defineFunction) {
-    if (defineFunction) throw new Error('Define function must be defined');
+    if (!defineFunction) throw new Error('Define function must be defined');
    
     if(defineFunction(inputs)) {
         button.disabled = false;
@@ -19,17 +19,34 @@ function activateBtnIfCreateOrAddPossible(button, inputs, defineFunction) {
 }
 
 function itemHaveAllKeys(inputs) {
-    if(typeof inputs !== "undefined") {
-        if(inputs.lenght === 4) {
-            return true;
+    if(isPropertyDefine(inputs.qty.value)) {
+        if(isPropertyDefine(inputs.cost.value)) {
+            if(isPropertyDefine(inputs.title.value)) {
+                if(isPropertyDefine(inputs.description.value)) {
+                    return true;
+                }
+            }
         }
     }
     return false;
 }
 
 function itemHaveKey(inputs) {
-    if(typeof inputs !== "undefined") {
-        if(inputs.lenght >= 1) {
+    if(!isPropertyDefine(inputs.qty.value)) {
+        if(!isPropertyDefine(inputs.inputscost.value)) {
+            if(!isPropertyDefine(inputs.title.value)) {
+                if(!isPropertyDefine(inputs.description.value)) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+function isPropertyDefine(property) {
+    if (typeof property !== "undefined" ) {
+        if (Boolean(property)) {
             return true;
         }
     }

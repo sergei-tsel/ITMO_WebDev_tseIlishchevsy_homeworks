@@ -59,12 +59,12 @@ serverService
 const invoiceInputs = { number: $(Dom.INPUT_INVOICE_NUMBER), discount: $(Dom.INPUT_DISCOUNT_PERCENT), iban: $(Dom.INPUT_IBAN_NUMBER) };
 const invoiceContainers = { subtotal: $(Dom.RESULTS_SUBTOTAL_CONTAINER), discount: $(Dom.RESULTS_DISCOUNT_CONTAINER), total: $(Dom.RESULTS_TOTAL_CONTAINER) };
 const invoiceFormService = new FormService(invoiceInputs, invoiceContainers);
-const invoiceList = invoiceFormService.getList();
+const invoiceList = invoiceFormService.getInvoiceList();
 
-const itemInputs = { qtu: $(Dom.INPUT_WORK_ITEM_QTY), cost: $(Dom.INPUT_WORK_ITEM_COST), title: $(Dom.INPUT_WORK_ITEM_TITLE), description: $(Dom.INPUT_WORK_ITEM_DESCRIPTION) };
+const itemInputs = { qty: $(Dom.INPUT_WORK_ITEM_QTY), cost: $(Dom.INPUT_WORK_ITEM_COST), title: $(Dom.INPUT_WORK_ITEM_TITLE), description: $(Dom.INPUT_WORK_ITEM_DESCRIPTION) };
 const itemContainers = { total: $(Dom.WORK_ITEM_TOTAL_CONTAINER) };
 const itemFormService = new FormService(itemInputs, itemContainers);
-const itemList = itemFormService.getList();
+const itemList = itemFormService.getItemList();
 
 const inputService = new InputService(isStringNotNumberAndNotEmpty);
 
@@ -80,16 +80,18 @@ async function keyupInvoiceNumber() {
 }
 
 async function clickAddBtn() {
-    $(Dom.BTN_DELETE_WORK_ITEM_POPUP).disabled = true;
+    $(Dom.BTN_DELETE_WORK_ITEM_POPUP).disabled = true; 
     $(Dom.BTN_CREATE_WORK_ITEM).disabled = true;
+    $(Dom.TITLE_WORK_ITEM_CONTAINER).innerText = 'Add';
     workItemMode = "Create";
+    $(Dom.BTN_CREATE_WORK_ITEM).innerText = "Create";
     $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = false;
 }
 
 async function clickItem() {
-    $(Dom.TITLE_WORK_ITEM_CONTAINER).value = 'Update';
+    $(Dom.TITLE_WORK_ITEM_CONTAINER).innerText = 'Update';
     workItemMode = "Add";
-    $(Dom.BTN_CREATE_WORK_ITEM).value = "Add";
+    $(Dom.BTN_CREATE_WORK_ITEM).innerText = "Add";
     $(Dom.BTN_CREATE_WORK_ITEM).disabled = true;
     const domElement = event.target;
     selectedItemVO = findItemById(domElement.id);
@@ -122,11 +124,11 @@ async function calculate_Invoice() {
 
 function create_Invoice() {
     const number = invoiceList.inputsValues.number;
-    const subtotal = invoiceList.containersValues.subtotal;
+    const subtotal = invoiceList.containersTexts.subtotal;
     const discountPercent = invoiceList.inputsValues.discount;
-    const discountSum = invoiceList.containersValues.discount;
-    const total = invoiceList.containersValues.total;
-    const iban = invoiceList.inputsValues.iban;
+    const discountSum = invoiceList.containersTexts.discount;
+    const total = invoiceList.containersTexts.total;
+    const iban = invoiceList.inputsValues;
     const newInvoiceVO = InvoiceVO.createFromTitle({number, subtotal, discountPercent, discountSum, total, iban});
     console.log('> create_Invoice -> invoice =', newInvoiceVO);
     return newInvoiceVO;
@@ -176,7 +178,7 @@ function clickDeleteBtn() {
 }
 
 function clickCloseBtn() {
-    if($(Dom.BTN_CREATE_WORK_ITEM).disabled === true) {
+    if($(Dom.BTN_CREATE_WORK_ITEM).disabled === false) {
         const result = confirm('Close the work item?');
         if(!result) {
             return;
@@ -224,23 +226,19 @@ function keyupDescription() {
 }
 
 function validate_Item(validateMethod = inputService.checkMethod, button = $(Dom.BTN_CREATE_WORK_ITEM)) {
-    if (inputService.validateInput(validateMethod)) {
-        if (button.disabled === false) {
-            if (workItemMode === "Create") {
-                const defineFunction = itemHaveAllKeys;
-            } else if (workItemMode === "Add") {
-                const defineFunction = itemHaveKey;
-            }
-            activateBtnIfCreateOrAddPossible(button, itemFormService.inputs, defineFunction);
-        }
-        return;
+    if (!inputService.validateInput(validateMethod)) {
+        inputService.reset();
     }
-    inputService.reset();
+    if (workItemMode === "Create") {
+        activateBtnIfCreateOrAddPossible(button, itemFormService.inputs, itemHaveAllKeys);
+    } else if (workItemMode === "Add") {
+        activateBtnIfCreateOrAddPossible(button, itemFormService.inputs, itemHaveKey);
+    }
+    console.log('> disabledItem: createBtn.disabled =', button.disabled);
 }
 
 function calculate_Item() {
     itemFormService.setItemContainer();
-    save_Item();
 }
 
 function create_Item() {
@@ -248,7 +246,7 @@ function create_Item() {
     const description = itemList.inputsValues.description;
     const qty = itemList.inputsValues.title;
     const cost = itemList.inputsValues.cost;
-    const total = itemList.containersValues.total;
+    const total = itemList.containersTexts.total;
     const newItemVO = ItemVO.createFromTitle({title, description, qty, cost, total});
     console.log('> create_Item -> item =', newItemVO);
     return newItemVO;

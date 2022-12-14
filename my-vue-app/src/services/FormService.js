@@ -1,41 +1,32 @@
 class FormService {
     constructor(inputs, containers) {
         console.log('> FormService -> constructor', inputs, containers);
-        this.inputs = Array.from(inputs);
-        this.containers = Array.from(containers);
-    }
-
-    get itemTotal() {  
-        const qty = this.inputs.qty ?? 0;
-        const cost = this.inputs.cost ?? 0;
-        return qty * cost;
+        this.inputs = inputs;
+        this.containers = containers;
     }
 
     get invoiceDiscountSum() {
-        const subtotal = this.invoiceSubtotal ?? 0;
-        const discountPercent = this.inputs.discount.value ?? 0;
-        return subtotal * (1 - discountPercent / 100);
+        return this.invoiceSubtotal * (1 - this.inputs.discount.value / 100);
     }
 
     get invoiceTotal() {
-        const subtotal = this.invoiceSubtotal ?? 0;
-        const discountPercent = this.inputs.discount.value ?? 0;
-        return subtotal * (discountPercent / 100);
+        return this.invoiceSubtotal * (this.inputs.discount.value / 100);
     }
 
-    setItemContainer() {
-        console.log(this.containers);
-        if(typeof this.containers.total !== "undefined") {
-            this.containers.total.value = this.itemTotal;
-        } else this.containers = { total: { value: [ this.itemTotal ] } };
-        console.log(`> FormService -> setItemContainer: ${this.containers.total.value}`);
+    get itemTotal() {  
+        return this.inputs.qty.value * this.inputs.cost.value;
     }
 
     setInvoiceContainers(tableOfItems) {
-        this.containers.subtotal.value = this.getInvoiceSubtotal(tableOfItems);
-        this.containers.discount.value = this.invoiceDiscountSum;
-        this.containers.total.value = this.invoiceTotal;
-        console.log(`> FormService -> setInvoiceContainers: ${this.containers.subtotal.value}, ${this.containers.discount.value}, ${this.containers.total.value}`);
+        this.containers.subtotal.innerText = this.getInvoiceSubtotal(tableOfItems);
+        this.containers.discount.innerText = this.invoiceDiscountSum;
+        this.containers.total.innerText = this.invoiceTotal;
+        console.log(`> FormService -> setInvoiceContainers: ${this.containers.subtotal.innerText}, ${this.containers.discount.innerText}, ${this.containers.total.innerText}`);
+    }
+
+    setItemContainer() {
+        this.containers.total.innerText = this.itemTotal;
+        console.log('> FormService -> setItemContainer:', this.containers.total.innerText);
     }
 
     getInvoiceSubtotal(tableOfItems) {
@@ -44,11 +35,19 @@ class FormService {
         return itemsTotals.reduce((sum, current) => sum + current, 0);
     }
 
-    getList() {
-        let inputsValues = this.inputs.map(item => item.value);
-        let containersValues = this.containers.map(item => item.value);
-        const list = { inputsValues, containersValues};
-        console.log("> FormService -> getList:", list);
+    getInvoiceList() {
+        let inputsValues = { number: this.inputs.number.value, discount: this.inputs.discount.value, iban: this.inputs.iban.value };
+        let containersTexts = { subtotal: this.containers.subtotal.innerText, discount: this.containers.discount.innerText, total: this.containers.discount.innerText };
+        const list = { inputsValues, containersTexts};
+        console.log("> FormService -> getInvoiceList:", list);
+        return list;
+    }
+
+    getItemList() {
+        let inputsValues = { qty: this.inputs.qty.value, cost: this.inputs.cost.value, title: this.inputs.title.value, description: this.inputs.description.value } ;
+        let containersTexts = { total: this.containers.total.innerText };
+        const list = { inputsValues, containersTexts};
+        console.log("> FormService -> getItemList:", list);
         return list;
     }
 
@@ -57,7 +56,7 @@ class FormService {
             input.value = '';
         }
         for (const container of this.containers) {
-            container.value = '';
+            container.innerText = '';
         }
     }
 }
