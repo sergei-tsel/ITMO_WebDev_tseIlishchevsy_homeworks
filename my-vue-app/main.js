@@ -37,7 +37,7 @@ const serverService = new ServerService('http://localhost:3003');
 const findItemById = (id) => tableOfItems.find((vo) => vo.id === id);
 
 wrapDevOnlyConsoleLog();
-/*
+
 serverService
     .requestItems()
     .then((itemTable) => {
@@ -55,16 +55,14 @@ serverService
       </div>`;
     })
     .finally(() => ($(Dom.APP).style.visibility = 'visible'));
-*/
+
 const invoiceInputs = { number: $(Dom.INPUT_INVOICE_NUMBER), discount: $(Dom.INPUT_DISCOUNT_PERCENT), iban: $(Dom.INPUT_IBAN_NUMBER) };
 const invoiceContainers = { subtotal: $(Dom.RESULTS_SUBTOTAL_CONTAINER), discount: $(Dom.RESULTS_DISCOUNT_CONTAINER), total: $(Dom.RESULTS_TOTAL_CONTAINER) };
 const invoiceFormService = new FormService(invoiceInputs, invoiceContainers);
-const invoiceList = invoiceFormService.getInvoiceList();
 
 const itemInputs = { qty: $(Dom.INPUT_WORK_ITEM_QTY), cost: $(Dom.INPUT_WORK_ITEM_COST), title: $(Dom.INPUT_WORK_ITEM_TITLE), description: $(Dom.INPUT_WORK_ITEM_DESCRIPTION) };
 const itemContainers = { total: $(Dom.WORK_ITEM_TOTAL_CONTAINER) };
 const itemFormService = new FormService(itemInputs, itemContainers);
-const itemList = itemFormService.getItemList();
 
 const inputService = new InputService(isStringNotNumberAndNotEmpty);
 
@@ -95,6 +93,7 @@ async function clickItem() {
     $(Dom.BTN_CREATE_WORK_ITEM).disabled = true;
     const domElement = event.target;
     selectedItemVO = findItemById(domElement.id);
+    console.log('> clickItem:', domElement, selectedItemVO);
     $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = false;
 }
 
@@ -102,7 +101,7 @@ async function keyupDiscountPercent() {
     inputService.setInput($(Dom.INPUT_DISCOUNT_PERCENT));
     console.log('> keyupDiscountPercent:', inputService.input.value);
     if(inputService.validateInput(isNumberWithMaxLength, 2)) {
-        await calculate_Invoice();
+        calculate_Invoice();
         await save_Invoice();
     } else inputService.reset();
 }
@@ -116,17 +115,18 @@ async function keyupIBANNumber() {
     } else inputService.reset();
 }
 
-async function calculate_Invoice() {
+function calculate_Invoice() {
     invoiceFormService.setInvoiceContainers(tableOfItems)
 }
 
 function create_Invoice() {
+    const invoiceList = invoiceFormService.getInvoiceList();
     const number = invoiceList.inputsValues.number;
     const subtotal = invoiceList.containersTexts.subtotal;
     const discountPercent = invoiceList.inputsValues.discount;
     const discountSum = invoiceList.containersTexts.discount;
     const total = invoiceList.containersTexts.total;
-    const iban = invoiceList.inputsValues;
+    const iban = invoiceList.inputsValues.iban;
     const newInvoiceVO = InvoiceVO.createFromTitle({number, subtotal, discountPercent, discountSum, total, iban});
     console.log('> create_Invoice -> invoice =', newInvoiceVO);
     return newInvoiceVO;
@@ -139,21 +139,22 @@ async function save_Invoice() {
         .then((data) => {
             console.log('> save_Invoice: saved =', data);
         })
-        .catch(alert);
+        .catch(alert);    
+    const invoiceList = invoiceFormService.getInvoiceList();
     localStorageSaveListOfWithKey(LOCAL_INVOICE_LIST, invoiceList);    
 }
 
 function render_ItemTableInContainer(tableOfItems, container) {
     let output = '';
     let itemVO;
-    let itemTotals = {};
     for (let index in tableOfItems) {
         itemVO = tableOfItems[index];
-        output += ItemView.createSimpleViewFromVO(index, ItemVO);
-        itemTotals.push(itemVO.total);
+        output += ItemView.createSimpleViewFromVO(itemVO);
     }
     container.innerHTML = output;
-    invoiceFormService.subtotal = itemTotals.reduce((sum, current) => sum + current);
+    console.log('> render_ItemTableInContainer:', tableOfItems);
+    localStorageSaveListOfWithKey(LOCAL_ITEMS_TABLE, tableOfItems);
+    invoiceFormService.setInvoiceSubtotal(tableOfItems);
 }
 
 function clickDeleteBtn() {
@@ -164,14 +165,13 @@ function clickDeleteBtn() {
     if(result) {
         serverService
             .deleteItems(itemId)
-            .then(async () => {
+            .then(() => {
                 tableOfItems.splice(tableOfItems.indexOf(itemVO), 1);
                 clear_Item();
-                clickCloseBtn();
+                $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
                 render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
-                await calculate_Invoice();
-            })
-            .catch(() => {});
+                calculate_Invoice();
+            });
     }
 }
 
@@ -209,8 +209,6 @@ function clickCreateBtn() {
     } else if(workItemMode === "Add") {
        update_Item();
     }
-    $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
-    calculate_Invoice();
 }
 
 function keyupTitle() {
@@ -242,9 +240,10 @@ function calculate_Item() {
 }
 
 function create_Item() {
+    const itemList = itemFormService.getItemList();
     const title = itemList.inputsValues.title;
     const description = itemList.inputsValues.description;
-    const qty = itemList.inputsValues.title;
+    const qty = itemList.inputsValues.qty;
     const cost = itemList.inputsValues.cost;
     const total = itemList.containersTexts.total;
     const newItemVO = ItemVO.createFromTitle({title, description, qty, cost, total});
@@ -256,32 +255,31 @@ function save_Item() {
     const itemVO = create_Item();
     serverService
         .saveItems(itemVO)
-        .then(async () => {
+        .then(() => {
             clear_Item();
-            clickCloseBtn();
+            $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
             render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
-            await calculate_Invoice();
-        })
-        .catch(() => {});
+            calculate_Invoice();
+        });
+    const itemList = itemFormService.getItemList();
     localStorageSaveListOfWithKey(LOCAL_ITEM_LIST, itemList);     
-    localStorageSaveListOfWithKey(LOCAL_ITEMS_TABLE, tableOfItems);
 }
 
 function update_Item() {
     serverService
         .updateItems(selectedItemVO, selectedItemVO.id)
-        .then(async () => {
+        .then(() => {
             clear_Item();
-            clickCloseBtn();
+            $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
             render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
-            await calculate_Invoice();
-        })
-        .catch(() => {});
-    localStorageSaveListOfWithKey(LOCAL_ITEM_LIST, itemList);
-    localStorageSaveListOfWithKey(LOCAL_ITEMS_TABLE, tableOfItems);    
+            calculate_Invoice();
+        });
+    const itemList = itemFormService.getItemList();
+    localStorageSaveListOfWithKey(LOCAL_ITEM_LIST, itemList);  
 }
 
 function clear_Item() {
-    itemFormService.clearValues();
+    itemFormService.clearItemForm();
+    const itemList = itemFormService.getItemList();
     localStorageDeleteListOfWithKey(LOCAL_ITEM_LIST, itemList);
 }

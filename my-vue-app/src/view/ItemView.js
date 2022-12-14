@@ -6,17 +6,17 @@ class ItemView {
     }
 
 
-    static createSimpleViewFromVO(index, vo) {
+    static createSimpleViewFromVO(vo) {
         return `
-           <div class="pointer-events-none grid grid-cols-8 select-none items-center border-b-1  py-2 hover:bg-gray-100">
-              <div class="col-span-4 self-end pl-2 pr-3">
-                 <div class="font-bold">vo.title</div>
-                 <div class="text-xs text-gray-400">vo.description</div>
-              </div>
-              <div>vo.qty</div>
-              <div>vo.cost</div>
-              <div class="col-span-2 text-right pr-2">vo.total</div>
-           </div>
+            <div id="${vo.title.id}" style="display: grid; grid-template-columns: repeat(4, 1fr); 8 -moz-user-select: none  items-center border-b-1 py-2 hover:bg-gray-100">
+                <div style="grid-column-start: 1; col-span-4 self-end pl-2 pr-3">
+                    <div style="font: bold">${vo.title.title}</div>
+                    <div style="color: gray">${vo.title.description}</div>
+                </div>
+                <div style="grid-column-start: 5">${vo.title.cost}</div>
+                <div style="grid-column-start: 6">${vo.title.qty}</div>
+                <div style="col-span-2 text-right pr-2">${vo.title.total}</div>
+            </div>
         `;
     }
 }

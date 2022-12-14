@@ -53,13 +53,12 @@ class FormService {
         return list;
     }
 
-    clearValues() {
-        for (const input of this.inputs) {
-            input.value = '';
-        }
-        for (const container of this.containers) {
-            container.innerText = '';
-        }
+    clearItemForm() {
+        this.inputs.qty.value = '';
+        this.inputs.cost.value = '';
+        this.inputs.title.value = '';
+        this.inputs.description.value = '';
+        this.containers.total.innerText = '';
     }
 }
 
