@@ -2,10 +2,10 @@ import { LOCAL_INVOICE_LIST, LOCAL_ITEM_LIST, LOCAL_ITEMS_TABLE } from '@/consts
 import Dom from "@/consts/dom";
 import InvoiceVO from '@/model/vos/InvoiceVO.js';
 import ItemVO from '@/model/vos/ItemVO.js';
-import { disableButtonWhenTextInvalid, activateBtnIfCreateOrAddPossible, itemHaveAllKeys, itemHaveKey } from '@/utils/domUtils.js';
+import { activateBtnIfCreateOrAddPossible, itemHaveAllKeys, itemHaveKey } from '@/utils/domUtils.js';
 import { isStringNotNumberAndNotEmpty, isNumberWithMaxLength, isOnlyNumbers, isNotLongerThenMaxLength, isOneLine, stylizeIBAN } from '@/utils/stringUtils.js';
-import { localStorageListOf, localStorageSaveListOfWithKey, localStorageDeleteListOfWithKey } from '@/utils/databaseUtils.js';
-import { delay, wrapDevOnlyConsoleLog, $ } from '@/utils/generalUtils.js';
+import { localStorageSaveListOfWithKey, localStorageDeleteListOfWithKey } from '@/utils/databaseUtils.js';
+import { wrapDevOnlyConsoleLog, $ } from '@/utils/generalUtils.js';
 import ItemView from '@/view/ItemView.js';
 import ServerService from '@/services/ServerService.js';
 import FormService from '@/services/FormService.js';
@@ -26,7 +26,7 @@ $(Dom.BTN_ADD_WORK_ITEM).addEventListener('click', clickAddBtn);
 $(Dom.INPUT_DISCOUNT_PERCENT).addEventListener('keyup', keyupDiscountPercent);
 $(Dom.INPUT_IBAN_NUMBER).addEventListener('keyup', keyupIBANNumber);
 
-let tableOfItems = [];
+let tableOfItems = {};
 
 let selectedItemVO = null;
 
@@ -45,6 +45,7 @@ serverService
         console.log('> Initial value:', itemTable);
 
         tableOfItems = itemTable;
+        calculate_Invoice();
         render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
     })
     .catch((error) => {
@@ -90,9 +91,12 @@ async function clickItem() {
     $(Dom.TITLE_WORK_ITEM_CONTAINER).innerText = 'Update';
     workItemMode = "Add";
     $(Dom.BTN_CREATE_WORK_ITEM).innerText = "Add";
+    $(Dom.BTN_CREATE_WORK_ITEM).disabled = false;
     $(Dom.BTN_CREATE_WORK_ITEM).disabled = true;
-    const domElement = event.target;
+    const chapter = event.target;
+    const domElement = chapter.closest('.vo');
     selectedItemVO = findItemById(domElement.id);
+    itemFormService.setItem(selectedItemVO);
     console.log('> clickItem:', domElement, selectedItemVO);
     $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = false;
 }
@@ -116,7 +120,8 @@ async function keyupIBANNumber() {
 }
 
 function calculate_Invoice() {
-    invoiceFormService.setInvoiceContainers(tableOfItems)
+    invoiceFormService.setInvoiceSubtotal(tableOfItems);
+    invoiceFormService.setInvoiceContainers();
 }
 
 function create_Invoice() {
@@ -132,7 +137,7 @@ function create_Invoice() {
     return newInvoiceVO;
 }
 
-async function save_Invoice() {
+function save_Invoice() {
     const invoiceVO = create_Invoice();
     serverService
         .saveInvoice(invoiceVO)
@@ -154,7 +159,6 @@ function render_ItemTableInContainer(tableOfItems, container) {
     container.innerHTML = output;
     console.log('> render_ItemTableInContainer:', tableOfItems);
     localStorageSaveListOfWithKey(LOCAL_ITEMS_TABLE, tableOfItems);
-    invoiceFormService.setInvoiceSubtotal(tableOfItems);
 }
 
 function clickDeleteBtn() {
@@ -258,21 +262,23 @@ function save_Item() {
         .then(() => {
             clear_Item();
             $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
-            render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
             calculate_Invoice();
+            render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
         });
     const itemList = itemFormService.getItemList();
     localStorageSaveListOfWithKey(LOCAL_ITEM_LIST, itemList);     
 }
 
 function update_Item() {
+    selectedItemVO = itemFormService.getItem(selectedItemVO);
+    console.log('> update_Item:', selectedItemVO);
     serverService
         .updateItems(selectedItemVO, selectedItemVO.id)
         .then(() => {
             clear_Item();
             $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
-            render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
             calculate_Invoice();
+            render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
         });
     const itemList = itemFormService.getItemList();
     localStorageSaveListOfWithKey(LOCAL_ITEM_LIST, itemList);  

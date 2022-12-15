@@ -6,11 +6,11 @@ class FormService {
     }
 
     get invoiceDiscountSum() {
-        return this.invoiceSubtotal * (1 - this.inputs.discount.value / 100);
+        return this.invoiceSubtotal * (this.inputs.discount.value / 100);
     }
 
     get invoiceTotal() {
-        return this.invoiceSubtotal * (this.inputs.discount.value / 100);
+        return this.invoiceSubtotal * (1 - this.inputs.discount.value / 100);
     }
 
     get itemTotal() {  
@@ -18,23 +18,33 @@ class FormService {
     }
 
     setInvoiceSubtotal(tableOfItems) {
-        const items = tableOfItems;
-        const itemsTotals = items.map(item => item.total);
-        this.invoiceSubtotal = itemsTotals.reduce((sum, current) => sum + current, 0);
+        let result = 0;
+        for (let item of tableOfItems) {
+            let total = item['title']['total'];
+            total = Number(total);
+            result = result + total;
+        }
+        this.invoiceSubtotal = result;
+        console.log(`> FormService -> setInvoiceSubtotal:`, result);
     }
 
-
-    setInvoiceContainers(tableOfItems) {
-        this.setInvoiceSubtotal(tableOfItems);
+    setInvoiceContainers() {
+        console.log(`> FormService -> setInvoiceContainers: ${this.invoiceSubtotal}, ${this.invoiceDiscountSum}, ${this.invoiceTotal}`);
         this.containers.subtotal.innerText = this.invoiceSubtotal;
         this.containers.discount.innerText = this.invoiceDiscountSum;
         this.containers.total.innerText = this.invoiceTotal;
-        console.log(`> FormService -> setInvoiceContainers: ${this.containers.subtotal.innerText}, ${this.containers.discount.innerText}, ${this.containers.total.innerText}`);
     }
 
     setItemContainer() {
         this.containers.total.innerText = this.itemTotal;
         console.log('> FormService -> setItemContainer:', this.containers.total.innerText);
+    }
+
+    setItem(item) {
+        this.inputs.qty.value = item.title.qty;
+        this.inputs.cost.value = item.title.cost;
+        this.inputs.title.value = item.title.title;
+        this.inputs.description.value = item.title.description;
     }
 
     getInvoiceList() {
@@ -53,12 +63,19 @@ class FormService {
         return list;
     }
 
+    getItem(item) {
+       item.title.qty = this.inputs.qty.value;
+       item.title.cost = this.inputs.cost.value;
+       item.title.total = this.containers.total.innerText;
+       item.title.title = this.inputs.title.value;
+       item.title.description = this.inputs.description.value;
+       return item;
+    }
     clearItemForm() {
         this.inputs.qty.value = '';
         this.inputs.cost.value = '';
         this.inputs.title.value = '';
         this.inputs.description.value = '';
-        this.containers.total.innerText = '';
     }
 }
 
