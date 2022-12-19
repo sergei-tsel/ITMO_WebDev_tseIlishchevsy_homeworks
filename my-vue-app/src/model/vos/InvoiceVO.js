@@ -1,9 +1,11 @@
 class InvoiceVO {
     static createFromTitle({ number, subtotal, discountPercent, discountSum, total, iban }) {
-        return new InvoiceVO({ number, subtotal, discountPercent, discountSum, total, iban });
+        const inputId = Date.now().toString();
+        return new InvoiceVO(inputId, { number, subtotal, discountPercent, discountSum, total, iban });
     }
 
-    constructor({ number, subtotal, discountPercent, discountSum, total, iban }, date = new Date()) {
+    constructor(id, { number, subtotal, discountPercent, discountSum, total, iban }, date = new Date()) {
+        this.id = id;
         this.number = number;
         this.subtotal = subtotal;
         this.discountPercent = discountPercent;

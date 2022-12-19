@@ -39,6 +39,13 @@ const findItemById = (id) => tableOfItems.find((vo) => vo.id === id);
 wrapDevOnlyConsoleLog();
 
 serverService
+    .requestInvoice()
+    .then((invoice) => {
+        console.log('> Initial value:', invoice);
+        renderInvoice(invoice);
+    });
+
+serverService
     .requestItems()
     .then((itemTable) => {
         console.log('> Initial env:', import.meta.env);
@@ -89,8 +96,8 @@ async function clickAddBtn() {
 
 async function clickItem() {
     $(Dom.TITLE_WORK_ITEM_CONTAINER).innerText = 'Update';
-    workItemMode = "Add";
-    $(Dom.BTN_CREATE_WORK_ITEM).innerText = "Add";
+    workItemMode = "Save";
+    $(Dom.BTN_CREATE_WORK_ITEM).innerText = "Save";
     $(Dom.BTN_CREATE_WORK_ITEM).disabled = false;
     $(Dom.BTN_CREATE_WORK_ITEM).disabled = true;
     const chapter = event.target;
@@ -147,6 +154,14 @@ function save_Invoice() {
         .catch(alert);    
     const invoiceList = invoiceFormService.getInvoiceList();
     localStorageSaveListOfWithKey(LOCAL_INVOICE_LIST, invoiceList);    
+}
+
+function renderInvoice(invoice) {
+    const last = invoice.length - 1;
+    const invoiceVO = invoice[last];
+    $(Dom.INPUT_INVOICE_NUMBER).value = invoiceVO.number;
+    $(Dom.INPUT_DISCOUNT_PERCENT).value = invoiceVO.discountPercent;
+    $(Dom.INPUT_IBAN_NUMBER).value = invoiceVO.iban;
 }
 
 function render_ItemTableInContainer(tableOfItems, container) {
@@ -210,7 +225,7 @@ function keyupCost() {
 function clickCreateBtn() {
     if(workItemMode === "Create") {
         save_Item();
-    } else if(workItemMode === "Add") {
+    } else if(workItemMode === "Save") {
        update_Item();
     }
 }
@@ -233,7 +248,7 @@ function validate_Item(validateMethod = inputService.checkMethod, button = $(Dom
     }
     if (workItemMode === "Create") {
         activateBtnIfCreateOrAddPossible(button, itemFormService.inputs, itemHaveAllKeys);
-    } else if (workItemMode === "Add") {
+    } else if (workItemMode === "Save") {
         activateBtnIfCreateOrAddPossible(button, itemFormService.inputs, itemHaveKey);
     }
     console.log('> disabledItem: createBtn.disabled =', button.disabled);
@@ -263,7 +278,7 @@ function save_Item() {
             clear_Item();
             $(Dom.POPUP_WORK_ITEM_CONTAINER).hidden = true;
             calculate_Invoice();
-            render_ItemTableInContainer(tableOfItems, $(Dom.TABLE_WORK_ITEMS));
+            location.reload();
         });
     const itemList = itemFormService.getItemList();
     localStorageSaveListOfWithKey(LOCAL_ITEM_LIST, itemList);     

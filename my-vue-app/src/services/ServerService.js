@@ -21,6 +21,12 @@ class ServerService {
     return `${this.url}/${DATA_ITEM_TABLE_RESOURCE}`;
   }
 
+  async requestInvoice() {
+    const path = this.invoicePath;
+    return await this.request(path, 'invoice');
+  }
+
+
   async saveInvoice(invoiceVO) {
     const path = this.invoicePath;
     return await this.save(invoiceVO, path, 'invoice');
